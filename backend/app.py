@@ -271,7 +271,7 @@ def init_hints_gen():
 
 
 @app.route("/api/story/part", methods=["POST"])
-def storypart_gen():
+def part_gen():
     try:
         data = request.get_json()
         if not data:
@@ -409,8 +409,9 @@ def actions_gen():
         return jsonify({"error": str(e)}), 500
     
     
+
 @app.route("/api/story/motion", methods=["POST"])
-def process_motion(): 
+def process_motion():
     try:
         data = request.get_json()
         if not data:
@@ -694,6 +695,7 @@ def premise_from_improv():
             return jsonify(type="error", message="No data found!", status=400)
         
         motion = {"description": desc, "emotion": emot, "keywords": keyw}               
+
         if logger:
             logger.debug(f"Transcript and motion received by premise_from_improv(): {transcript} {motion}")  
     
