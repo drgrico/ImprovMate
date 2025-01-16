@@ -32,6 +32,7 @@ class Storyteller:
     def __init__(self, key, org) -> None:
         self.llm = OpenAI(api_key=key, organization=org)
         self.gpt4 = MODEL_GPT4
+        self.gpt4mini = MODEL_GPT4MINI
         self.gpt3 = MODEL_GPT3
         self.vision = MODEL_VISION
         self.image_gen = MODEL_IMAGE_GEN
@@ -168,13 +169,12 @@ You a great storyteller.
 1. Using the input context, initialize a story.
 2. Generate the first part of the story.
     - Not more than %d sentences.
-3. %s
-4. The story should be about the protagonist in the context.
-5. Give a short visual description of a key moment in the story part.
+3. The story should be about the protagonist in the context.
+4. Give a short visual description of a key moment in the story part.
     - Describe the environment.
     - Do not name the main character.
-6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-7. Return as a JSON object.
+5. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
+6. Return as a JSON object.
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
 
@@ -189,7 +189,7 @@ Example JSON object:
     "objects": ["tuna", "toys"],
 }
 """
-                        % (length, complexity),
+                        % (length),
                     }
                 ],
             },
@@ -300,12 +300,11 @@ You a great storyteller.
 2. Generate the final part of the story.
     - Reach a conclusion for the story.
     - %s
-3. %s
-5. Give a short visual description of a key moment in the story part.
+3. Give a short visual description of a key moment in the story part.
     - Describe the environment.
     - Do not name the main character.
-6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-7. Return as a JSON object.
+4. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
+5. Return as a JSON object.
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
 
@@ -321,7 +320,7 @@ Example JSON object:
     }
 }
 """
-                        % (ending, complexity),
+                        % (ending),
                     }
                 ],
             },
@@ -352,10 +351,9 @@ You a great storyteller.
 1. Understand the story so far.
 2. Help me generate %d unique actions the main character may perform.
 3. Each action should advance the current story somehow.
-3. Action is defined by:
+4. Action is defined by:
     - Title, few words describing the action.
     - Description, very short paragraph with more details.
-4. %s
 5. Return as a JSON object. 
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
@@ -374,7 +372,7 @@ Here is an example JSON object:
     ]
 }
                         """
-                        % (n * 2, complexity),
+                        % (n * 2),
                     }
                 ],
             },
@@ -433,8 +431,7 @@ You a great storyteller.
     - Describe the environment.
     - Do not name the main character.
 6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-7. %s
-8. Return as a JSON object.
+7. Return as a JSON object.
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
     
@@ -450,7 +447,7 @@ Example JSON object:
     }
 }
 """
-                        % (setting, length, complexity),
+                        % (setting, length),
                     }
                 ],
             },
@@ -488,8 +485,7 @@ You are a helpful assistant. Help me generate a story premise for this character
 2. For each premise include the following:
     - title, a short title for the premise.
     - desc, a short description of the premise.
-3. %s
-4. Return as a JSON object. 
+3. Return as a JSON object. 
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
 
@@ -503,7 +499,7 @@ Example JSON object:
     ]
 }
 """
-                        % (n, complexity),
+                        % (n),
                     }
                 ],
             },
@@ -578,8 +574,7 @@ You are a helpful assistant. Help me understand the drawing in this photo.
 3. Name the character in the drawing.
 4. If the character is unknown, invent a name for it.
 5. Write a short backstory about the character in the drawing.
-6. %s
-7. Return as a JSON object. 
+6. Return as a JSON object. 
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
 
@@ -606,7 +601,6 @@ Here is an example JSON object:
     }
 }
 """
-                        % (complexity),
                     }
                 ],
             },
@@ -860,109 +854,108 @@ Example:
         return self.__get_json_data(data)
 
 
-    def generate_motion_part(self, context, complexity):
-        # Generate a story part based on the motion labeling result
-        premise = context.get("premise")
-        story = context.get("story")
-        motion = context.get("motion").get("data")
-        action = motion.get("action")
-        desc = motion.get("desc")
-        emotion = motion.get("emotion") # TODO: should we use it?
+#     def generate_motion_part(self, context, complexity):
+#         # Generate a story part based on the motion labeling result
+#         premise = context.get("premise")
+#         story = context.get("story")
+#         motion = context.get("motion").get("data")
+#         action = motion.get("action")
+#         desc = motion.get("desc")
+#         emotion = motion.get("emotion") # TODO: should we use it?
         
-        ctx = {"premise": premise, "story": story, "action": action, "desc": desc, "emotion": emotion}
+#         ctx = {"premise": premise, "story": story, "action": action, "desc": desc, "emotion": emotion}
         
-        length = random.choice([1, 1, 1, 2, 2, 3, 4])
-        settings = [
-            "Something absurdly good happens to the main character.",
-            "Something absurdly bad happens to the main character.",
-            "Introduce a new friendly character.",
-            "Introduce a new relevant item.",
-            "Advance the story in time (time skip).",
-            "Move the story to a new location.",
-            "Twist something already known.",
-            "End with a cliffhanger.",
-        ]
+#         length = random.choice([1, 1, 1, 2, 2, 3, 4])
+#         settings = [
+#             "Something absurdly good happens to the main character.",
+#             "Something absurdly bad happens to the main character.",
+#             "Introduce a new friendly character.",
+#             "Introduce a new relevant item.",
+#             "Advance the story in time (time skip).",
+#             "Move the story to a new location.",
+#             "Twist something already known.",
+#             "End with a cliffhanger.",
+#         ]
         
-        # Randomly select a setting from the list
-        setting = random.choice(settings)
-        convergence = random.choice([setting, "Direct the story towards the premise."])
-        messages = [
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": """
-You a great storyteller.
-1. Understand the input object, which includes: 
-    {
-        "premise": The main scenario or conflict of the story,
-        "story": The narrative context that has been estabilished so far,
-        "action": The primary action to be performed by the main character,
-        "desc": A detailed description of a person's action which may involve gestures related to tools or objects,
-        "emotion": The emotional state associated with the action,
-    }
-Example:
-    {
-        "premise": "Johnny needs to find out who stole his tuna.",
-        "story": "Once upon a time there was a cat named Johnny who loved to eat tuna. One day when Johnny was playing with his toys, he heard a noise coming from the kitchen.",
-        "action": "Investigate",
-        "desc": "A person looking around as if searching for something."
-        "emotion": "Confused",
-    }
-2. Understand the story so far.
-3. Continue the story by ensuring that the main character directly performs the action described in "desc" with a strong influence from the "emotion". 
-The same action should have varied narrative outcomes based on the emotion, e.g.:
-    - If the "emotion" is "Friendly", a fist thrown could be a fist bump.
-    - If the "emotion" is "Hostile", the same fist might be a punch.
-Use any tools or objects implied by the gesture in "desc", integrating them into the narrative. 
-Do not describe the character mimicking an action (e.g. "raising his hand to mimic drinking from a cup"). The character must perform the real action (e.g. "He picked up the cup and drank").
-For example:
-    - If "desc" mentions a person mimicking the action of swinging a hammer, the character should actually use a hammer in the story. 
-4. The next story part should be:
-    - %s
-    - %s
-    - Not more than %d sentences.
-5. Generate a short visual description of a key moment in the new part:
-    - Describe the environment.
-    - Do not name the main character.
-6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-7. %s
-8. Return as a JSON object.
-    - No styling and all in ascii characters.
-    - Use double quotes for keys and values.
+#         # Randomly select a setting from the list
+#         setting = random.choice(settings)
+#         convergence = random.choice([setting, "Direct the story towards the premise."])
+#         messages = [
+#             {
+#                 "role": "system",
+#                 "content": [
+#                     {
+#                         "type": "text",
+#                         "text": """
+# You a great storyteller.
+# 1. Understand the input object, which includes: 
+#     {
+#         "premise": The main scenario or conflict of the story,
+#         "story": The narrative context that has been estabilished so far,
+#         "action": The primary action to be performed by the main character,
+#         "desc": A detailed description of a person's action which may involve gestures related to tools or objects,
+#         "emotion": The emotional state associated with the action,
+#     }
+# Example:
+#     {
+#         "premise": "Johnny needs to find out who stole his tuna.",
+#         "story": "Once upon a time there was a cat named Johnny who loved to eat tuna. One day when Johnny was playing with his toys, he heard a noise coming from the kitchen.",
+#         "action": "Investigate",
+#         "desc": "A person looking around as if searching for something."
+#         "emotion": "Confused",
+#     }
+# 2. Understand the story so far.
+# 3. Continue the story by ensuring that the main character directly performs the action described in "desc" with a strong influence from the "emotion". 
+# The same action should have varied narrative outcomes based on the emotion, e.g.:
+#     - If the "emotion" is "Friendly", a fist thrown could be a fist bump.
+#     - If the "emotion" is "Hostile", the same fist might be a punch.
+# Use any tools or objects implied by the gesture in "desc", integrating them into the narrative. 
+# Do not describe the character mimicking an action (e.g. "raising his hand to mimic drinking from a cup"). The character must perform the real action (e.g. "He picked up the cup and drank").
+# For example:
+#     - If "desc" mentions a person mimicking the action of swinging a hammer, the character should actually use a hammer in the story. 
+# 4. The next story part should be:
+#     - %s
+#     - %s
+#     - Not more than %d sentences.
+# 5. Generate a short visual description of a key moment in the new part:
+#     - Describe the environment.
+#     - Do not name the main character.
+# 6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
+# 7. Return as a JSON object.
+#     - No styling and all in ascii characters.
+#     - Use double quotes for keys and values.
     
-Example JSON object:
-{
-    "part": {
-        "text": "He looked around to investigate as if searching for something and found that someone had stolen his tuna!",
-        "keymoment": "A can of tune filled with tuna that is overflowing to the floor in a kitchen."
-        "sentiment": "sad",
-        "who": ["Johnny"],
-        "where": "kitchen",
-        "objects": ["tuna"],
-    }
-}
-"""
-                        % (convergence, setting, length, complexity),
-                    }
-                ],
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": str(ctx),
-                    },
-                ],
-            },
-        ]
+# Example JSON object:
+# {
+#     "part": {
+#         "text": "He looked around to investigate as if searching for something and found that someone had stolen his tuna!",
+#         "keymoment": "A can of tune filled with tuna that is overflowing to the floor in a kitchen."
+#         "sentiment": "sad",
+#         "who": ["Johnny"],
+#         "where": "kitchen",
+#         "objects": ["tuna"],
+#     }
+# }
+# """
+#                         % (convergence, setting, length),
+#                     }
+#                 ],
+#             },
+#             {
+#                 "role": "user",
+#                 "content": [
+#                     {
+#                         "type": "text",
+#                         "text": str(ctx),
+#                     },
+#                 ],
+#             },
+#         ]
 
-        if logger:
-            logger.debug(f"Chosen setting: {setting}")
-        data = self.send_gpt4_request(messages)
-        return self.__get_json_data(data) 
+#         if logger:
+#             logger.debug(f"Chosen setting: {setting}")
+#         data = self.send_gpt4_request(messages)
+#         return self.__get_json_data(data) 
        
         
     def speech_to_text(self, audio_file, language="en"): #TODO: change prompt?
@@ -1227,15 +1220,20 @@ Example JSON object:
             logger.debug(f"Context in generate_part_improv(): {context}")
         premise = context.get("premise")
         story = context.get("story")
+        keypoint = context.get("keypoint")
+        who = keypoint[1]
+        where = keypoint[2]
+        objects = keypoint[3]
         improv = context.get("improv").get("data")
         action = improv.get("action")
         desc = improv.get("description")
         emotion = improv.get("emotion") # TODO: should we use it?
         transcript = improv.get("transcript")
         
-        ctx = {"premise": premise, "story": story, "action": action, "desc": desc, "emotion": emotion, "transcript": transcript}
+        ctx = {"premise": premise, "story": story, "action": action, "desc": desc, "emotion": emotion, "transcript": transcript, "who": who, "where": where, "objects": objects}
         if logger:
             logger.debug(f"Ctx in generate_part_improv(): {ctx}")
+            logger.debug(f"Keypoint in generate_part_improv(): {who}\n{where}\n{objects}")
             
         length = random.choice([1, 1, 1, 2, 2, 3, 4])
         # settings = [
@@ -1268,6 +1266,9 @@ You a great storyteller.
         "desc": A detailed description of a person's action which may involve gestures related to tools or objects,
         "emotion": The emotional state associated with the action,
         "transcript": What was said by the character during the action,
+        "who": The characters present in the story told so far,
+        "where": The location where the story takes place,
+        "objects": The objects present in the story told so far,
     }
 Example:
     {
@@ -1277,6 +1278,9 @@ Example:
         "desc": "A person looking around as if searching for something."
         "emotion": "Confused",
         "transcript": "Where is it? I heard something.",
+        "who": ["Johnny"],
+        "where": "kitchen",
+        "objects": ["tuna"],
     }
 2. Understand the story so far.
 3. Continue the story by ensuring that the main character directly performs the action described in "desc" with a strong influence from the "emotion". 
@@ -1290,12 +1294,12 @@ For example:
     - If "desc" mentions a person mimicking the action of swinging a hammer, the character should actually use a hammer in the story. 
 4. The next story part should be:
     - Not more than %d sentences.
+    - Take into account the "who", "where" and "objects" present in the story so far. Omit them only if they are not relevant to the new part.
 5. Generate a short visual description of a key moment in the new part:
     - Describe the environment.
     - Do not name the main character.
 6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-7. %s
-8. Return as a JSON object.
+7. Return as a JSON object.
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
     
@@ -1311,7 +1315,7 @@ Example JSON object:
     }
 }
 """
-                        % (length, complexity),
+                        % (length),
                     }
                 ],
             },
@@ -1585,6 +1589,30 @@ Example JSON object:
             if logger:
                 logger.error(e)
             raise e
+        finally:
+            if logger:
+                logger.debug("Using a model with a higher limit of tokens per minute.")
+            try:
+                response = self.llm.chat.completions.create(
+                    model=self.gpt4mini,
+                    messages=request,
+                    response_format={"type": "json_object"} if is_json else None,
+                    max_tokens=1024,
+                    temperature=temperature,
+                    presence_penalty=presence_penalty,
+                )
+                if logger:
+                    logger.debug(
+                        f"Successfuly sent 'chat' LLM request with model={self.gpt4}"
+                    )
+
+                jresponse = json.loads(response.model_dump_json())
+
+                return jresponse["choices"][0]["message"]["content"]
+            except Exception as e:
+                if logger:
+                    logger.error(e)
+                raise e
 
 
     def send_gpt3_request(

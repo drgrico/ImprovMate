@@ -238,6 +238,11 @@ export const getKeyPointsTable = () => {
   };
 }
 
+export const getLastKeyPoint = () => {
+  const kp = useKeyPointsState.getState();
+  return kp.body?.[kp.body.length - 1];
+}
+
 export const checkFormat = (kp: any) => {
   return {
     head: kp.head,

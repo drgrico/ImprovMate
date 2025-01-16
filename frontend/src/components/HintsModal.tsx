@@ -10,15 +10,18 @@ import { usePreferencesStore } from "../stores/preferencesStore";
 type Props = {
   display: boolean;
   ending: boolean;
+  storyImprov: boolean;
   selectedHints: { [key: string]: string };
   setSelectedHints: (val: { [key: string]: string }) => void;
+  setEndStory: (value: boolean) => void;
   finalAction: () => void;
 };
 
-const HintsModal = ({ display, ending, selectedHints = {}, setSelectedHints, finalAction }: Props) => {
+const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHints = {}, setSelectedHints, setEndStory, finalAction }: Props) => {
   const instance = getAxiosInstance();
   const isMobile = useMediaQuery("(max-width: 50em)");
   const [hintList, setHintList] = useState<any[]>([]);
+  const [ending, setEnding] = useState<boolean>(startingEnding);
   const sourceLanguage = "en";
   const targetLanguage = usePreferencesStore.use.language();
   // console.log("Preference language:", targetLanguage);
@@ -121,6 +124,15 @@ const HintsModal = ({ display, ending, selectedHints = {}, setSelectedHints, fin
     refetch();
   };
 
+  const toggleMode = () => {
+    console.log("Changing mode...", selectedHints);
+    setEnding(true);
+    setEndStory(ending);
+    setSelectedHints({});
+    setHintList([]);
+    refetch();
+  }
+
   // console.log("hintList.length: ", hintList.length);
   // console.log("ending: ", ending);
   useEffect(() => {
@@ -218,9 +230,16 @@ const HintsModal = ({ display, ending, selectedHints = {}, setSelectedHints, fin
         <Button align="center" disabled={isLoading} onClick={finalAction} mr="md">
           Done
         </Button>
-        <Button align="center" disabled={isLoading} onClick={handleNewHints}>
+        <Button align="center" disabled={isLoading} onClick={handleNewHints} mr="md">
           New Hints
         </Button>
+        {storyImprov && (
+           <Button disabled={isLoading} onClick={toggleMode}>
+           {
+              ending ? "End Story" : "Continue Story"
+           }
+         </Button>
+        )}
         </Box>
       </Container>
     </Modal>

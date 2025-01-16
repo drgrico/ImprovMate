@@ -1,16 +1,14 @@
-import { Box, Button, Container, Flex, Grid, Modal, Select, Stack, Text } from '@mantine/core'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Box, Button, Container, Grid, Modal, Select, Stack, Text } from '@mantine/core'
+import { useRef, useState } from 'react'
 import useWebcam from '../hooks/useWebcam';
 import getAxiosInstance from '../utils/axiosInstance';
 import { useDisclosure, useInterval } from '@mantine/hooks';
 import Webcam from 'react-webcam';
-import ImageSlideshow from './ImageSlideshow';
 import { useMutation } from '@tanstack/react-query';
-import { appendStory, chooseAction, getStoryText, setCharacter, setPremise, useAdventureStore } from '../stores/adventureStore';
+import { appendStory, chooseAction, getLastKeyPoint, getStoryText, setFinished, useAdventureStore, useKeyPointsState } from '../stores/adventureStore';
 import { createCallContext, createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
-import { TPremise } from '../types/Premise';
 import { usePreferencesStore } from "../stores/preferencesStore";
 
 type Props = {
@@ -38,6 +36,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
 
     const [hintsModal, { open: openHints, close: closeHints }] = useDisclosure();
     const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
+    const [endStory, setEndStory] = useState(false);
     const language = usePreferencesStore.use.language();
 
     const instance = getAxiosInstance();
@@ -54,7 +53,12 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
             console.log("Motion uploaded", data);
             setFrames([]);
             
-            handleResult.mutate(data);
+            if (endStory) {
+                handleEnding.mutate(data);
+            }
+            else {
+                handleResult.mutate(data);
+            }
             // finalAction(); //Moved to handleResult
         }
     });
@@ -78,7 +82,13 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
             const story = getStoryText()?.join(" ");
 
             return instance
-                .post("/story/improvpart", createCallContext({...{improv: improv, story: story, premise: useAdventureStore.getState().premise?.desc}}))
+                .post("/story/improvpart", 
+                    createCallContext({...{
+                        improv: improv, 
+                        story: story, 
+                        premise: useAdventureStore.getState().premise?.desc,
+                        keypoint: getLastKeyPoint()
+                    }}))
                 .then((res) => res.data.data);
             },
         onSuccess: (data) => {
@@ -88,6 +98,27 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
             chooseAction(null); //TODO: do I need this?
             setGenerated(true);
             finalAction();    
+        },
+    });
+
+    const handleEnding = useMutation({
+        mutationKey: ["motion-part"],
+        mutationFn: (improv: any) => {
+            console.log("Improv in handleResult: ", improv);
+            const story = getStoryText()?.join(" ");
+
+            return instance
+                .post("/story/end_story_improv", {story: story, improv: improv})
+                .then((res) => res.data.data);
+            },
+        onSuccess: (data) => {
+            console.log("Part generated with improv: ", data);
+            appendStory(data, false);
+            setSelectedHints({}); //TODO: put it after usage, here ok?
+            chooseAction(null); //TODO: do I need this?
+            setGenerated(false);
+            setFinished();
+            finalAction();          
         },
     });
 
@@ -217,8 +248,8 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
                         left: 0,
                         zIndex: 10,
                       }}
-                      hidden={frames.length === 0 || isCapturing || !mediaBlob}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob) && (
+                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleResult.isPending}>
+                      {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
                               <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />
@@ -251,21 +282,21 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
                                   disabled={!isCapturing}>Stop Recording</Button>
                           )}
                           {!isCapturing &&
-                              <Button onClick={handleStartRecording} fullWidth
-                                  color={
-                                      frames.length > 0 ? 'orange' : 'violet'
-                                  }
-                                  disabled={isCapturing}>
-                                  {
-                                      isCapturing ? 'Recording...' : frames.length > 0 ? 'Retake' : 'Start Recording'
-                                  }
-                              </Button>
+                            <Button onClick={handleStartRecording} fullWidth
+                                color={
+                                    (frames.length > 0 || handleResult.isPending) ? 'orange' : 'violet'
+                                }
+                                disabled={isCapturing || uploadImprov.isPending || handleResult.isPending}>
+                                {
+                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleResult.isPending) ? 'Retake' : 'Start Recording'
+                                }
+                            </Button>
                           }
                       </Grid.Col>
                       <Grid.Col span={6}>
                           <Button onClick={handleUpload} fullWidth
                               disabled={frames.length === 0 || isCapturing}
-                              loading={uploadImprov.isPending}
+                              loading={uploadImprov.isPending || handleResult.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
                                   Send
                           </Button>
@@ -279,7 +310,13 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
             </Modal>
           </Box>
         </Box>
-        <HintsModal display={hintsModal} ending={false} selectedHints={selectedHints} setSelectedHints={setSelectedHints} finalAction={closeHints} />
+        <HintsModal display={hintsModal} 
+                    ending={false}
+                    storyImprov={true} 
+                    selectedHints={selectedHints} 
+                    setSelectedHints={setSelectedHints} 
+                    setEndStory={setEndStory}
+                    finalAction={closeHints} />
       </>
     )
 }

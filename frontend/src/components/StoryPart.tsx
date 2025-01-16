@@ -32,7 +32,6 @@ import useTranslation from "../hooks/useTranslation";
 import { createCallContext } from "../utils/llmIntegration";
 import { useSessionStore } from "../stores/sessionStore";
 import { useDisclosure } from "@mantine/hooks";
-import MotionUploadModal from "./MotionUploadModal";
 import ImprovPartUploadModal from "./ImprovPartUpload";
 
 type Props = {
@@ -106,7 +105,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
   const outcome = useMutation({
     mutationKey: ["story-part"],
     mutationFn: (context: any) => {
-      console.log("Generating new story part: ", context);
+      console.log("StoryPart - Generating new story part: ", context);
       scrollIntoView();
       return instance
         .post("/story/part", createCallContext({ ...context }))

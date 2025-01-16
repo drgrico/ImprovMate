@@ -217,8 +217,8 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                         left: 0,
                         zIndex: 10,
                       }}
-                      hidden={frames.length === 0 || isCapturing || !mediaBlob}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob) && (
+                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleResult.isPending}>
+                      {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
                               <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />
@@ -251,21 +251,21 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                                   disabled={!isCapturing}>Stop Recording</Button>
                           )}
                           {!isCapturing &&
-                              <Button onClick={handleStartRecording} fullWidth
-                                  color={
-                                      frames.length > 0 ? 'orange' : 'violet'
-                                  }
-                                  disabled={isCapturing}>
-                                  {
-                                      isCapturing ? 'Recording...' : frames.length > 0 ? 'Retake' : 'Start Recording'
-                                  }
-                              </Button>
+                            <Button onClick={handleStartRecording} fullWidth
+                                color={
+                                    (frames.length > 0 || handleResult.isPending) ? 'orange' : 'violet'
+                                }
+                                disabled={isCapturing || uploadMotion.isPending || handleResult.isPending}>
+                                {
+                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleResult.isPending) ? 'Retake' : 'Start Recording'
+                                }
+                            </Button>
                           }
                       </Grid.Col>
                       <Grid.Col span={6}>
                           <Button onClick={handleUpload} fullWidth
                               disabled={frames.length === 0 || isCapturing}
-                              loading={uploadMotion.isPending}
+                              loading={uploadMotion.isPending || handleResult.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
                                   Send
                           </Button>
@@ -279,7 +279,14 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
             </Modal>
           </Box>
         </Box>
-        <HintsModal display={hintsModal} ending={true} selectedHints={selectedHints} setSelectedHints={setSelectedHints} finalAction={closeHints} />
+        <HintsModal display={hintsModal}
+                    ending={true}
+                    storyImprov={false}
+                    selectedHints={selectedHints}
+                    setSelectedHints={setSelectedHints}
+                    finalAction={closeHints} setEndStory={function (value: boolean): void {
+                        throw new Error('Function not implemented.');
+                    } } />
       </>
     )
 }

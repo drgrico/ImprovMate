@@ -445,35 +445,35 @@ def process_motion():
         return jsonify({"error": str(e)}), 500
     
     
-@app.route("/api/story/motionpart", methods=["POST"])
-def motionpart_gen():
-    try:
-        data = request.get_json()
-        if not data:
-            if logger:
-                logger.error("No data found in the request!")
-            return jsonify(type="error", message="No data found!", status=400)
-        if logger:
-            logger.debug(f"Data received by motionpart_gen(): {data}")
+# @app.route("/api/story/motionpart", methods=["POST"])
+# def motionpart_gen():
+#     try:
+#         data = request.get_json()
+#         if not data:
+#             if logger:
+#                 logger.error("No data found in the request!")
+#             return jsonify(type="error", message="No data found!", status=400)
+#         if logger:
+#             logger.debug(f"Data received by motionpart_gen(): {data}")
             
-        complexity = data.get("complexity", None)
-        context = data.get("context", None)
+#         complexity = data.get("complexity", None)
+#         context = data.get("context", None)
         
-        result = llm.generate_motion_part(context, complexity)
-        part_id = uuid.uuid4()
-        if logger:
-            logger.debug(f"Story part generated: {result}")
-        part = result["part"]
-        return jsonify(
-            type="success",
-            message="Story part generated!",
-            status=200,
-            data={"id": part_id, **part},
-        )
-    except Exception as e:
-        if logger:
-            logger.error(str(e))
-        return jsonify({"error": str(e)}), 500
+#         result = llm.generate_motion_part(context, complexity)
+#         part_id = uuid.uuid4()
+#         if logger:
+#             logger.debug(f"Story part generated: {result}")
+#         part = result["part"]
+#         return jsonify(
+#             type="success",
+#             message="Story part generated!",
+#             status=200,
+#             data={"id": part_id, **part},
+#         )
+#     except Exception as e:
+#         if logger:
+#             logger.error(str(e))
+#         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/story/speech-to-text", methods=["POST"])
@@ -629,7 +629,13 @@ def storypart_from_improv():
         complexity = data.get("complexity", None)
         context = data.get("context", None)
         
-        result = llm.generate_part_improv(context, complexity)
+        result = None
+        retry_count = 0
+        while result is None and retry_count < 3:
+            result = llm.generate_part_improv(context, complexity)
+            retry_count += 1
+            if result is None and logger:
+                logger.warning(f"Retrying generate_part_improv, attempt {retry_count}")
         part_id = uuid.uuid4()
         if logger:
             logger.debug(f"Story part generated: {result}")

@@ -100,6 +100,16 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
         },
     });
 
+    // useEffect(() => {
+    //     console.log("frames.length:", frames.length, "isCapturing:", isCapturing, "mediaBlob:", mediaBlob, "handleResult.isPending:", handleResult.isPending);
+    //     console.log("is hidden: ", frames.length === 0 || isCapturing || !mediaBlob);
+    //     console.log("is rendered: ", frames.length !== 0 && !isCapturing && mediaBlob);
+
+        
+    //     console.log("new condition - hidden: ", (frames.length === 0 || isCapturing || !mediaBlob) && !handleResult.isPending);
+    //     console.log("new condition - rendered: ", frames.length !== 0 && !isCapturing && mediaBlob || handleResult.isPending);
+    // }, [frames.length, isCapturing, mediaBlob, handleResult.isPending]);
+
     const handleStartRecording = () => {
         console.log("Starting recording...");
         setFrames([]);
@@ -226,8 +236,8 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                         left: 0,
                         zIndex: 10,
                       }}
-                      hidden={frames.length === 0 || isCapturing || !mediaBlob}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob) && (
+                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleResult.isPending}>
+                      {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
                               <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />
@@ -262,11 +272,11 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                           {!isCapturing &&
                               <Button onClick={handleStartRecording} fullWidth
                                   color={
-                                      frames.length > 0 ? 'orange' : 'violet'
+                                    (frames.length > 0 || handleResult.isPending) ? 'orange' : 'violet'
                                   }
-                                  disabled={isCapturing}>
+                                  disabled={isCapturing || uploadMotion.isPending || handleResult.isPending}>
                                   {
-                                      isCapturing ? 'Recording...' : frames.length > 0 ? 'Retake' : 'Start Recording'
+                                      isCapturing ? 'Recording...' : (frames.length > 0 || handleResult.isPending) ? 'Retake' : 'Start Recording'
                                   }
                               </Button>
                           }
@@ -274,7 +284,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                       <Grid.Col span={6}>
                           <Button onClick={handleUpload} fullWidth
                               disabled={frames.length === 0 || isCapturing}
-                              loading={uploadMotion.isPending}
+                              loading={uploadMotion.isPending || handleResult.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
                                   Send
                           </Button>
@@ -288,7 +298,14 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
             </Modal>
           </Box>
         </Box>
-        <HintsModal display={hintsModal} ending={false} selectedHints={selectedHints} setSelectedHints={setSelectedHints} finalAction={closeHints} />
+        <HintsModal display={hintsModal}
+                    ending={false}
+                    storyImprov={false} 
+                    selectedHints={selectedHints}
+                    setSelectedHints={setSelectedHints}
+                    finalAction={closeHints} setEndStory={function (value: boolean): void {
+                        throw new Error('Function not implemented.');
+                    }}/>
       </>
     )
 }

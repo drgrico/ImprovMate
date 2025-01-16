@@ -32,7 +32,6 @@ import useTranslation from "../hooks/useTranslation";
 import { createCallContext } from "../utils/llmIntegration";
 import { resetSession, useSessionStore } from "../stores/sessionStore";
 import { useDisclosure } from "@mantine/hooks";
-import MotionUploadModal from "./MotionUploadModal";
 import PracticeEndImprovModal from "./PracticeEndImprovModal";
 import { clearStore } from "../stores/adventureStore";
 
