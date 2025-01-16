@@ -1,3 +1,5 @@
+import base64
+import io
 import os, sys
 import random
 import uuid
@@ -21,10 +23,9 @@ CORS(app)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 
-PORT = os.environ.get("PORT", 5000)
-
-HOST = os.environ.get("HOST", "0.0.0.0")
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "t")
+PORT = os.environ.get("FLASK_PORT", 5000)
+HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
+DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1", "t")
 LOGGER = os.environ.get("LOGGER", "False").lower() in ("true", "1", "t")
 STORAGE_PATH = "static"
 
@@ -89,6 +90,8 @@ def index():
 def image_save():
     os.makedirs(STORAGE_PATH, exist_ok=True)
     # Save the base64 image
+    if logger:
+            logger.debug("Request in image_save:", request)
     data = request.get_json()
 
     base64_url = data["image"]
@@ -222,6 +225,42 @@ def premise_gen():
         return jsonify(
             type="success",
             message="Story premise generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/hints", methods=["POST"])
+def init_hints_gen():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+
+        if logger:
+            logger.debug(f"Data in end_hints_gen: {data}")
+        complexity = data.get("context").get("complexity", None)
+        language = data.get("language", None)
+        if logger:
+            logger.debug(f"Complexity: {complexity}, Language: {language}")
+
+        result = llm.generate_init_hints(
+            complexity,
+            language,
+            HINTS_GEN_COUNT,
+        )
+        
+        if logger:
+            logger.debug(f"Initial hints generated: {result}")
+        return jsonify(
+            type="success",
+            message="Initial hints generated!",
             status=200,
             data={**result},
         )
@@ -368,7 +407,8 @@ def actions_gen():
         if logger:
             logger.error(str(e))
         return jsonify({"error": str(e)}), 500
-
+    
+    
 
 @app.route("/api/story/motion", methods=["POST"])
 def process_motion():
@@ -378,14 +418,20 @@ def process_motion():
             if logger:
                 logger.error("No data found in the request!")
             return jsonify(type="error", message="No data found!", status=400)
-
+        
         frames = data.get("frames", None)
         if not frames:
             if logger:
                 logger.error("No frames found in the request!")
             return jsonify(type="error", message="No frames found!", status=400)
+        
+        story = data.get("story", None)
+        if not story:
+            if logger:
+                logger.error("No story found in the request!")
+            return jsonify(type="error", message="No story found!", status=400)
 
-        result = llm.process_motion(frames)
+        result = llm.process_motion(frames, story)
         if logger:
             logger.debug(f"Motion processed: {result}")
         return jsonify(
@@ -398,10 +444,314 @@ def process_motion():
         if logger:
             logger.error(str(e))
         return jsonify({"error": str(e)}), 500
+    
+    
+# @app.route("/api/story/motionpart", methods=["POST"])
+# def motionpart_gen():
+#     try:
+#         data = request.get_json()
+#         if not data:
+#             if logger:
+#                 logger.error("No data found in the request!")
+#             return jsonify(type="error", message="No data found!", status=400)
+#         if logger:
+#             logger.debug(f"Data received by motionpart_gen(): {data}")
+            
+#         complexity = data.get("complexity", None)
+#         context = data.get("context", None)
+        
+#         result = llm.generate_motion_part(context, complexity)
+#         part_id = uuid.uuid4()
+#         if logger:
+#             logger.debug(f"Story part generated: {result}")
+#         part = result["part"]
+#         return jsonify(
+#             type="success",
+#             message="Story part generated!",
+#             status=200,
+#             data={"id": part_id, **part},
+#         )
+#     except Exception as e:
+#         if logger:
+#             logger.error(str(e))
+#         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/api/story/speech-to-text", methods=["POST"])
+def speech_to_text():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            # logger.debug(f"Data received by speech-to-text(): {data}")
+            logger.debug(f"Data received by speech-to-text().")
+
+        audio = data.get("audio")
+        language = data.get("language")
+        if not language:
+            if logger:
+                logger.error("No language found in the request!")
+            return jsonify(type="error", message="No language found!", status=400)
+        
+        audio_data = base64.b64decode(audio.split(",")[1])
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"
+        
+        result = llm.speech_to_text(audio_file, language)
+        
+        result_dict = result.to_dict() if hasattr(result, 'to_dict') else result.__dict__
+
+        if logger:
+            logger.debug(f"Speech to text: {result}")
+        return jsonify(
+            type="success",
+            message="Speech to text!",
+            status=200,
+            data=result_dict,
+        )
+    except Exception as e:
+        if logger:
+            logger.error(f"Error in stt: {str(e)} {result}")
+        return jsonify({"error": str(e)}), 500
+
+    
+@app.route("/api/story/startingimprov", methods=["POST"])
+def starting_improv(): # TODO: SIMILAR TO PROCESS MOTION
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by starting_improv(): {data}")
+            # logger.debug(f"Data received by starting_improv().")
+            
+        frames = data.get("frames")
+        if not frames:
+            if logger:
+                logger.error("No frames found in the request!")
+            return jsonify(type="error", message="No frames found!", status=400)
+       
+        transcript = data.get("audioResult").get("data").get("text")
+        # if not transcript:
+        #     if logger:
+        #         logger.error(f"No transcript found in the request! {data}")
+        #     return jsonify(type="error", message="No transcript found!", status=400)
+        if logger:
+            logger.debug(f"Transcript received by starting_improv(): {transcript}")
+
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", False)
+
+        result = llm.process_improv_noctx(end, frames, hints, transcript, language)
+        result["transcript"] = transcript
+        if logger:
+            logger.debug(f"Starting improv result: {result}")
+        return jsonify(
+            type="success",
+            message="Starting improv!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(f"Error in starting_improv: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/process_improv", methods=["POST"])
+def process_improv(): # TODO: SIMILAR TO starting_improv(frames, transcript) + motionpart_gen(context)
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            # logger.debug(f"Data received by starting_improv(): {data}")
+            logger.debug(f"Data received by starting_improv().")
+            
+        frames = data.get("frames")
+        if not frames:
+            if logger:
+                logger.error("No frames found in the request!")
+            return jsonify(type="error", message="No frames found!", status=400)
+       
+        transcript = data.get("audioResult").get("data").get("text")
+        # if not transcript:
+        #     if logger:
+        #         logger.error(f"No transcript found in the request! {data}")
+        #     return jsonify(type="error", message="No transcript found!", status=400)
+        if logger:
+            logger.debug(f"Transcript received by starting_improv(): {transcript}")
+            
+        story = data.get("story")
+        if not story:
+            if logger:
+                logger.error("No story found in the request!")
+            return jsonify(type="error", message="No story found!", status=400)
+
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", False)
+
+        result = llm.process_improv_ctx(end, frames, story, hints, transcript, language)
+        result["transcript"] = transcript
+        if logger:
+            logger.debug(f"Process improv result: {result}")
+        return jsonify(
+            type="success",
+            message="Starting improv!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(f"Error in starting_improv: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/api/story/improvpart", methods=["POST"])
+def storypart_from_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by motionpart_gen(): {data}")
+            
+        complexity = data.get("complexity", None)
+        context = data.get("context", None)
+        
+        result = None
+        retry_count = 0
+        while result is None and retry_count < 3:
+            result = llm.generate_part_improv(context, complexity)
+            retry_count += 1
+            if result is None and logger:
+                logger.warning(f"Retrying generate_part_improv, attempt {retry_count}")
+        part_id = uuid.uuid4()
+        if logger:
+            logger.debug(f"Story part generated: {result}")
+        part = result["part"]
+        return jsonify(
+            type="success",
+            message="Story part generated!",
+            status=200,
+            data={"id": part_id, **part},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+        
+    
+@app.route("/api/story/improvpremise", methods=["POST"])
+def premise_from_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by premise_from_improv(): {data}")
+        
+        # req = data.get("data")
+        # if not req:
+        #     if logger:
+        #         logger.error("No data found in the request!")
+        #     return jsonify(type="error", message="No data found!", status=400)
+        
+        transcript = data.get("data").get("transcript")
+        # if not transcript:
+        #     if logger:
+        #         logger.error("No transcript found in the request!")
+        #     return jsonify(type="error", message="No data found!", status=400)
+        
+        desc = data.get("data").get("description")
+        if not desc:
+            if logger:
+                logger.error("No description found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        emot = data.get("data").get("emotion")
+        if not emot:
+            if logger:
+                logger.error("No emotion found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        keyw = data.get("data").get("keywords")
+        if not keyw:
+            if logger:
+                logger.error("No keywords found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        motion = {"description": desc, "emotion": emot, "keywords": keyw}               
+
+        if logger:
+            logger.debug(f"Transcript and motion received by premise_from_improv(): {transcript} {motion}")  
+    
+        character = llm.generate_character_improv(transcript, motion)    
+        result = llm.generate_premise_improv(transcript, motion, character)
+        result["character"] = character
+        # image = llm.generate_character_image_improv(character)
+        # result["image"] = image
+        result["id"] = uuid.uuid4()
+        
+        if logger:
+            logger.debug(f"Premise and character generated: {result}")
+        return jsonify(
+            type="success",
+            message="Story part generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/character_image", methods=["POST"])
+def gen_character_img():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        character = data.get("character")
+        if not character:
+            if logger:
+                logger.error("No character found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        result = llm.generate_character_image_improv(character)
+        if logger:
+            logger.debug(f"Character image generated: {result}")
+        return jsonify(
+            type="success",
+            message="Story image generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+    
 
 @app.route("/api/story/image", methods=["POST"])
-def storyimage_gen():
+def storyimage_gen(): #TODO: retry if error?
     try:
         data = request.get_json()
         if not data:
@@ -417,6 +767,152 @@ def storyimage_gen():
             message="Story image generated!",
             status=200,
             data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        try:
+            result = llm.generate_story_image(data)
+            if logger:
+                logger.debug(f"Story image generated on retry: {result}")
+            return jsonify(
+                type="success",
+                message="Story image generated on retry!",
+                status=200,
+                data={**result},
+            )
+        except Exception as e:
+            if logger:
+                logger.error(str(e))
+            return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/practice/generate_storytoend", methods=["POST"])
+def generate_story_to_end():
+    try:
+        if logger:
+            logger.debug(f"Generating story to end...")
+        result = llm.generate_story_to_end()
+        story_id = uuid.uuid4()
+        part_id = uuid.uuid4()
+        if logger:
+            logger.info(f"Ending generated!")
+
+        return jsonify(
+            type="success",
+            message="Ending generated!",
+            status=200,
+            data={"id": story_id, "parts": [{"id": part_id, **result}]},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/end_hints", methods=["POST"])
+def end_hints_gen():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+
+        if logger:
+            logger.debug(f"Data in end_hints_gen: {data}")
+        complexity = data.get("context").get("complexity", None)
+        language = data.get("language", None)
+        if logger:
+            logger.debug(f"Complexity: {complexity}, Language: {language}")
+
+        result = llm.generate_end_hints(
+            complexity,
+            language,
+            HINTS_GEN_COUNT,
+        )
+        
+        if logger:
+            logger.debug(f"Ending hints generated: {result}")
+        return jsonify(
+            type="success",
+            message="Initial hints generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/end_story_improv", methods=["POST"])
+def end_story_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Generating ending...")
+        
+        improv = data.get("improv")
+        if not improv:
+            if logger:
+                logger.error("No improv found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        story = data.get("story")
+        if not story:
+            if logger:
+                logger.error("No previous story part found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        
+        result = llm.terminate_story_improv(story, improv)
+        if logger:
+            logger.info(f"Ending generated!")
+            
+        part_id = uuid.uuid4()
+        part = result["part"]
+        return jsonify(
+            type="success",
+            message="Story part generated!",
+            status=200,
+            data={"id": part_id, **part},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/practice/generate_questions", methods=["POST"])
+def generate_questions():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Generating questions...")
+            
+        max_q = data.get("maxQ", 20)
+
+        result = llm.generate_questions(max_q)
+        if logger:
+            logger.info(f"Questions generated: {result}")
+        story_id = uuid.uuid4()
+        parts = [{"id": uuid.uuid4(), **result["questions"][i]} for i in range(0, max_q)]
+        if logger:
+            logger.info(f"Parts: {parts}")
+
+        return jsonify(
+            type="success",
+            message="Questions generated!",
+            status=200,
+            data={"id": story_id, "parts": parts},
         )
     except Exception as e:
         if logger:
@@ -447,6 +943,38 @@ def translate_text():
         return jsonify(
             type="success",
             message="Text translated!",
+            status=200,
+            data={"text": result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/translate_keypoints", methods=["GET"])
+def translate_keypoints():
+    try:
+        keypoints = request.args.get("keypoints")
+        src_lang = request.args.get("src_lang")
+        tgt_lang = request.args.get("tgt_lang")
+
+        if src_lang == tgt_lang:
+            if logger:
+                logger.debug("No translation needed!")
+            return jsonify(
+                type="success",
+                message="No translation needed!",
+                status=200,
+                data={"text": text},
+            )
+
+        if logger:
+            logger.debug(f"Translating keypoints from {src_lang} to {tgt_lang}: {keypoints}")
+        result = llm.translate_keypoints(keypoints, src_lang, tgt_lang)
+        return jsonify(
+            type="success",
+            message="Keypoints translated!",
             status=200,
             data={"text": result},
         )

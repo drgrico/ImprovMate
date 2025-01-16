@@ -5,6 +5,7 @@ import { TImage } from "../types/Image";
 import { TCharacter } from "../types/Character";
 import { TPremise } from "../types/Premise";
 import { TAction, TStory, TStoryPart } from "../types/Story";
+import { TableData } from "@mantine/core";
 
 const initialState = {
   id: null as string | null,
@@ -13,6 +14,14 @@ const initialState = {
   premise: null as TPremise | null,
   story: null as TStory | null,
   finished: false,
+};
+
+const keypointsTableData: TableData = {
+  // caption: 'Keypoints of the story',
+  head: ['Story Part', 'Who', 'Where', 'Objects'],
+  body: [
+    // [1, 'Riccardo', 'Roma', 'A red car'],
+  ],
 };
 
 export const useAdventureStore = createSelectors(
@@ -31,6 +40,24 @@ export const useAdventureStore = createSelectors(
 
 export const clearStore = () => {
   useAdventureStore.setState(initialState);
+  useKeyPointsState.setState(keypointsTableData);
+};
+
+export const setCharacterNoImage = (id: string, character: TCharacter) => {
+  useAdventureStore.setState(() => {
+    return {
+      id,
+      character,
+    };
+  });
+};
+
+export const setCharacterImage = (image: TImage) => {
+  useAdventureStore.setState(() => {
+    return {
+      image,
+    };
+  });
 };
 
 export const setCharacter = (
@@ -56,6 +83,9 @@ export const setPremise = (premise: TPremise) => {
 };
 
 export const startStory = (story: TStory) => {
+  if (story.parts.length > 0) { 
+    addKeyPoints([story.parts[0].who, story.parts[0].where, story.parts[0].objects]);
+  }
   useAdventureStore.setState(() => {
     return {
       story,
@@ -63,7 +93,16 @@ export const startStory = (story: TStory) => {
   });
 };
 
-export const appendStory = (part: TStoryPart) => {
+export const appendStory = (part: TStoryPart, improv: boolean) => {
+  console.log("Appending story part: ", part);
+  if (improv) {
+    part.actions = [];
+    part.improv = true;
+  }
+  else {
+    part.improv = false;
+  }
+  addKeyPoints([part.who, part.where, part.objects]);
   useAdventureStore.setState((state) => {
     if (!state.story) return state;
     return {
@@ -89,7 +128,29 @@ export const updateActions = (actions: TAction[]) => {
   });
 };
 
-export const chooseAction = (action: TAction) => {
+export const chooseAction = (action: TAction | null) => {
+  if (action === null) {
+    action = {id: "", title: "Motion Capture", desc: "", active: true, used: false};
+    useAdventureStore.setState((state) => {
+      if (!state.story) return state;
+      const parts = state.story.parts;
+      parts[parts.length - 2].actions = parts[parts.length - 2].actions?.map(
+        (a) => {
+          a.active = false;
+          if (a.title === action?.title) {
+            a.used = true;
+          }
+          return a;
+        }
+      );
+      return {
+        story: {
+          ...state.story,
+          parts,
+        },
+      };
+    });
+  }
   useAdventureStore.setState((state) => {
     if (!state.story) return state;
     const parts = state.story.parts;
@@ -110,6 +171,10 @@ export const chooseAction = (action: TAction) => {
     };
   });
 };
+
+export const printState = () => {
+  console.log("Story state: ", useAdventureStore.getState());
+}
 
 export const getStoryText = () => {
   return useAdventureStore.getState().story?.parts.map((part) => part.text);
@@ -145,3 +210,57 @@ export const setFinished = () => {
     };
   });
 };
+
+export const useKeyPointsState = createSelectors(
+  create<typeof keypointsTableData>()(
+    devtools(
+      persist(() => keypointsTableData, {
+        name: "keypoints",
+        storage: createJSONStorage(() => sessionStorage),
+      }),
+      {
+        name: "KeyPoints",
+      }
+    )
+  )
+);
+
+export const getKeyPointsTable = () => {
+  const kp = useKeyPointsState.getState()
+  return {
+    head: kp.head,
+    body: kp.body?.map((row) => [
+      row[0],
+      Array.isArray(row[1]) ? row[1].join(", ") : row[1],
+      row[2],
+      Array.isArray(row[3]) ? row[3].join(", ") : row[3],
+    ]),
+  };
+}
+
+export const getLastKeyPoint = () => {
+  const kp = useKeyPointsState.getState();
+  return kp.body?.[kp.body.length - 1];
+}
+
+export const checkFormat = (kp: any) => {
+  return {
+    head: kp.head,
+    body: kp.body?.map((row) => [
+      row[0],
+      Array.isArray(row[1]) ? row[1].join(", ") : row[1],
+      row[2],
+      Array.isArray(row[3]) ? row[3].join(", ") : row[3],
+    ]),
+  };
+}
+
+export const addKeyPoints = (keypoints: any) => {
+  console.log("Adding keypoint: ", keypoints);
+  useKeyPointsState.setState((state) => {
+    return {
+      ...state,
+      body: [...(state.body || []), [(state.body?.length ?? 0) + 1, ...keypoints]],
+    };
+  });
+}

@@ -8,26 +8,45 @@ import {
   Text,
   Button,
   Box,
+  Grid,
+  Select,
+  Flex,
 } from "@mantine/core";
 import { useAdventureStore } from "../stores/adventureStore";
-import { initSession, useSessionStore } from "../stores/sessionStore";
+import { initSession, instructionsLang, useSessionStore } from "../stores/sessionStore";
 import getAxiosInstance from "../utils/axiosInstance";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
 import DrawingUploadModal from "./DrawingUploadModal";
 import PremiseSelectModal from "./PremiseSelectModal";
+import { useState } from "react";
+import StartImprovUploadModal from "./StartImprovUploadModal";
+import { usePreferencesStore } from "../stores/preferencesStore";
 
-const InstructionView = () => {
+type InstructionViewProps = {
+  setGameMode: (mode: string) => void;
+  setIsStartedEndings: (mode: boolean) => void;
+  setIsStarted3Things: (mode: boolean) => void;
+}
+
+const InstructionView = ({ setGameMode, selectedHints, setSelectedHints, setIsStartedEndings, setIsStarted3Things } : InstructionViewProps) => {
   const instance = getAxiosInstance();
   const session = useSessionStore.use.id();
   const character = useAdventureStore.use.character();
   const premise = useAdventureStore.use.premise();
+  const language = usePreferencesStore.use.language();
 
   const [captureModal, { open: openCapture, close: closeCapture }] =
     useDisclosure();
   const [premiseModal, { open: openPremise, close: closePremise }] =
     useDisclosure();
+  const [improvModal, { open: openImprov, close: closeImprov }] =
+    useDisclosure();
 
+  const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  
+  const instructions = instructionsLang[language === 'it' ? 'it' : 'en'];
+  
   const newSession = useMutation({
     mutationKey: ["session"],
     mutationFn: () => {
@@ -38,66 +57,219 @@ const InstructionView = () => {
     },
   });
 
+  const handleGameModeChange = (value: string | null) => {
+    if (value !== null) {
+      setGameMode(value);
+      setSelectedMode(value);
+    
+      // Perform any action based on the selected value
+      console.log('Selected game mode:', value);
+    }
+  };
+
+  const handleStartEndings = () => {
+    setIsStartedEndings(true);
+    console.log('Started endings:', true);
+  };
+
   return (
     <>
       <Center>
+        <Stack align="center" mb={rem(20)}>
         <Paper withBorder p="xl" radius="lg" mt={rem(20)}>
           <Stack align="center" mb={rem(20)}>
             <Title order={3} fs="italic">
-              Your Adventure Awaits
+              {instructions[0]}
             </Title>
             <Divider size="sm" w={rem(128)} />
           </Stack>
           <Stack align="start" gap="sm">
             <Box opacity={!session ? 1 : 0.5}>
               <Text>
-                1. Start a{" "}
+                {instructions[1]}{" "}
                 <Button
                   m="xs"
                   size="compact-md"
                   onClick={() => newSession.mutate()}
                   disabled={session != null}
                 >
-                  New Session
+                  {instructions[2]}
                 </Button>{" "}
-                to set up the system, and feel free to change the settings.
+                {instructions[3]}
               </Text>
             </Box>
 
+           
             <Box opacity={session != null && !character ? 1 : 0.5}>
-              <Text>
-                2. Upload and{" "}
-                <Button
-                  m="xs"
-                  size="compact-md"
-                  onClick={openCapture}
-                  disabled={session == null || character != null}
-                >
-                  Capture your Drawing
-                </Button>{" "}
-                of a character to be the hero of your story.
-              </Text>
-            </Box>
-            <Box
-              opacity={
-                session != null && character != null && !premise ? 1 : 0.5
-              }
-            >
-              <Text>
-                3. Select a{" "}
-                <Button
-                  m="xs"
-                  size="compact-md"
-                  onClick={openPremise}
-                  disabled={character == null || premise != null}
-                >
-                  Premise
-                </Button>{" "}
-                to set the stage for your story.
-              </Text>
+              <Flex align="center">
+              <Text mr="xs">
+                {instructions[4]}</Text>
+                <Select
+                    m="xs"
+                    placeholder="Game Mode"
+                    data={[
+                      { value: 'story', label: 'Story' },
+                      { value: 'practice', label: 'Practice' },
+                    ]}
+                    disabled={session == null || character != null}
+                    value={selectedMode}
+                    onChange={handleGameModeChange}
+                  />
+              <Text>.</Text>
+              </Flex>                  
             </Box>
           </Stack>
         </Paper>
+        {(selectedMode=="story") && (
+          <Grid>
+            <Grid.Col span={6}>
+              <Box opacity={session!=null ? 1 : 0.5}>
+              <Paper withBorder p="xl" radius="lg" mt={rem(20)}>
+                <Stack align="center" mb={rem(20)}>
+                  <Title order={3} fs="italic">
+                    {instructions[5]}
+                  </Title>
+                  <Divider size="sm" w={rem(128)} />
+                </Stack>
+                <Stack>
+                  <Box opacity={session != null && !character ? 1 : 0.5}>
+                    <Text>
+                     {instructions[6]}{" "}
+                      <Button
+                        m="xs"
+                        size="compact-md"
+                        onClick={openCapture} //TODO: change from character to context (+character)
+                        disabled={session == null || character != null}
+                      >
+                        {instructions[7]}
+                      </Button>{" "}
+                      {instructions[8]}
+                    </Text>
+                  </Box>
+                  <Box
+                    opacity={session != null && character != null && !premise ? 1 : 0.5}>
+                    <Text>
+                      {instructions[9]}{" "}
+                        <Button
+                          m="xs"
+                          size="compact-md"
+                          onClick={openPremise}
+                          disabled={character == null || premise != null}
+                        >
+                          {instructions[10]}
+                        </Button>{" "}
+                      {instructions[11]}
+                    </Text>
+                  </Box>
+                </Stack>
+              </Paper>
+              </Box>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Box opacity={session!=null ? 1 : 0.5}>
+              <Paper withBorder p="xl" radius="lg" mt={rem(20)}>
+                <Stack align="center" mb={rem(20)}>
+                  <Title order={3} fs="italic">
+                    {instructions[12]}
+                  </Title>
+                  <Divider size="sm" w={rem(128)} />
+                </Stack>
+                <Stack>
+                  <Box>
+                  <Text>
+                    {instructions[13]}
+                  </Text>  
+                  </Box>
+
+                  <Box>
+                    <Text>
+                      {instructions[14]}{" "}
+                      <Button
+                          m="xs"
+                          size="compact-md"
+                          onClick={openImprov}
+                          disabled={character != null || premise != null || session == null}
+                        >
+                        {instructions[15]}
+                      </Button>{" "} 
+                      {instructions[16]}
+                    </Text>
+                  </Box>
+                </Stack>
+              </Paper>
+              </Box>
+            </Grid.Col>
+          </Grid>
+        )}
+        {(selectedMode=="practice") && (
+          <Grid>
+          <Grid.Col span={6}>
+            <Box opacity={session!=null ? 1 : 0.5}>
+            <Paper withBorder p="xl" radius="lg" mt={rem(20)}>
+              <Stack align="center" mb={rem(20)}>
+                <Title order={3} fs="italic">
+                  {instructions[17]}
+                </Title>
+                <Divider size="sm" w={rem(128)} />
+              </Stack>
+              <Stack>
+                <Box>
+                  <Text mb={rem(20)}>
+                    {instructions[18]}            
+                  </Text>
+                  <Text mb={rem(20)}>
+                    {instructions[19]}           
+                  </Text>
+                  <Box style={{ textAlign: 'center' }}>
+                  <Button
+                          m="xs"
+                          size="compact-md"
+                          onClick={() => setIsStarted3Things(true)} //TODO: change
+                          //TODO: add disabled?
+                        >
+                        {instructions[20]}
+                  </Button>{" "} 
+                  </Box>
+                </Box>
+              </Stack>
+            </Paper>
+            </Box>
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <Box opacity={session!=null ? 1 : 0.5}>
+            <Paper withBorder p="xl" radius="lg" mt={rem(20)}>
+              <Stack align="center" mb={rem(20)}>
+                <Title order={3} fs="italic">
+                  {instructions[21]}
+                </Title>
+                <Divider size="sm" w={rem(128)} />
+              </Stack>
+              <Stack>
+                <Box>
+                  <Text mb={rem(20)}>
+                    {instructions[22]}       
+                  </Text>
+                  <Text mb={rem(20)}>
+                    {instructions[23]}            
+                  </Text>
+                  <Box style={{ textAlign: 'center' }}>
+                  <Button
+                          m="xs"
+                          size="compact-md"
+                          onClick={handleStartEndings} //TODO: change
+                          //TODO: add disabled?
+                        >
+                        {instructions[24]}
+                  </Button>{" "} 
+                  </Box>
+                </Box>
+              </Stack>
+            </Paper>
+            </Box>
+          </Grid.Col>
+        </Grid>
+        )}
+        </Stack>
       </Center>
       <DrawingUploadModal display={captureModal} finalAction={closeCapture} />
       <PremiseSelectModal
@@ -105,6 +277,7 @@ const InstructionView = () => {
         display={premiseModal}
         finalAction={closePremise}
       />
+      <StartImprovUploadModal display={improvModal} finalAction={closeImprov} />
     </>
   );
 };

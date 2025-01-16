@@ -1,6 +1,7 @@
 # OpenAI API
 MODEL_VISION = "gpt-4o"
 MODEL_GPT4 = "gpt-4o"
+MODEL_GPT4MINI = "gpt-4o-mini"
 MODEL_GPT3 = "gpt-3.5-turbo"
 MODEL_IMAGE_GEN = "dall-e-2"
 MODEL_TTS = "tts-1"
@@ -12,6 +13,7 @@ IMAGE_GEN_RESOLUTION = "256x256"
 APP_IMAGE_EXT = ["jpg", "jpeg", "png"]
 FLASK_DEBUG = True
 PREMISE_GEN_COUNT = 3
+HINTS_GEN_COUNT = 3
 ACTION_GEN_COUNT = 2
 
 # LLM settings

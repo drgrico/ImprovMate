@@ -11,6 +11,7 @@ export const languageOptions = [
   { label: "Hebrew", value: "he" },
   { label: "Japanese", value: "ja" },
   { label: "Spanish", value: "es" },
+  { label: "Italian", value: "it" },
 ];
 
 export const complexityOptions: TComplexity[] = [
@@ -50,5 +51,15 @@ export const createCallContext = (data: any) => {
   return {
     complexity: complexityPrompt,
     context: data,
+  };
+};
+
+export const createCallLanguage = (data: any) => {
+  const language = usePreferencesStore.getState().language;
+  console.log("Language in createCallLanguage: ", language);
+  // console.log("Data in createCallLanguage: ", data);
+  return { 
+    audio: data,
+    language: language,
   };
 };

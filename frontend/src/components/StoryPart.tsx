@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Image,
   Box,
@@ -21,6 +21,7 @@ import {
   appendStory,
   chooseAction,
   getStoryText,
+  printState,
   setFinished,
   updateActions,
   updateStoryImage,
@@ -31,14 +32,16 @@ import useTranslation from "../hooks/useTranslation";
 import { createCallContext } from "../utils/llmIntegration";
 import { useSessionStore } from "../stores/sessionStore";
 import { useDisclosure } from "@mantine/hooks";
-import MotionUploadModal from "./MotionUploadModal";
+import ImprovPartUploadModal from "./ImprovPartUpload";
 
 type Props = {
   part: TStoryPart;
   isNew: boolean;
+  storyImprovGenerated: boolean;
+  setStoryImprovGenerated: (generated: boolean) => void;
 };
 
-const StoryPart = ({ part, isNew }: Props) => {
+const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated }: Props) => {
   const instance = getAxiosInstance();
   const { colorScheme } = useMantineColorScheme();
   const isSm = useMediaQuery("(max-width: 48em)");
@@ -71,6 +74,7 @@ const StoryPart = ({ part, isNew }: Props) => {
     },
     enabled:
       !finished &&
+      !part.improv &&
       (!part.actions || (!!part.actions && part.actions.length === 0)),
     staleTime: Infinity,
     refetchOnMount: false,
@@ -101,13 +105,14 @@ const StoryPart = ({ part, isNew }: Props) => {
   const outcome = useMutation({
     mutationKey: ["story-part"],
     mutationFn: (context: any) => {
+      console.log("StoryPart - Generating new story part: ", context);
       scrollIntoView();
       return instance
         .post("/story/part", createCallContext({ ...context }))
         .then((res) => res.data.data);
     },
     onSuccess: (data) => {
-      appendStory(data);
+      appendStory(data, false);
     },
   });
 
@@ -119,7 +124,7 @@ const StoryPart = ({ part, isNew }: Props) => {
         .then((res) => res.data.data);
     },
     onSuccess: (data) => {
-      appendStory(data);
+      appendStory(data, false);
       setFinished();
     },
   });
@@ -143,6 +148,7 @@ const StoryPart = ({ part, isNew }: Props) => {
         story: story,
       });
     }
+    printState();
   };
 
   useEffect(() => {
@@ -154,9 +160,49 @@ const StoryPart = ({ part, isNew }: Props) => {
   const [captureModal, { open: openCapture, close: closeCapture }] =
     useDisclosure();
 
+  const handleMotionClick =  (action: TAction) => {
+    if (!action.active) return;
+    openCapture();
+    printState();
+  };
+
+  const hasRunRef = useRef(false); //TODO: remove?
+
+  useEffect(() => {
+    if (isNew && storyImprovGenerated && !hasRunRef.current) {
+      hasRunRef.current = true;
+      console.log("storyImprovGenerated is set to:", storyImprovGenerated);
+      setStoryImprovGenerated(false);
+      const story = getStoryText()?.join(" ");
+      if (!story) return;
+      setTimeout(() => {
+        console.log("Generating new story part triggered...");
+        outcome.mutate({
+          premise: useAdventureStore.getState().premise?.desc,
+          story: story,
+        });
+      }, 10000); // 10-second delay (to give time to generate previous image) TODO: decrease?
+    }
+  }, [storyImprovGenerated]);
+
+  const finalActionImprov = () => {
+    closeCapture();
+    console.log("storyImprovGenerated: ", storyImprovGenerated);
+    // if (storyImprovGenerated) {
+    //   console.log("Generating new story part triggered...");
+    //   const story = getStoryText()?.join(" ");
+    //   if (!story) return;
+    //   outcome.mutate({
+    //     premise: useAdventureStore.getState().premise?.desc,
+    //     story: story,
+    //   });
+    // }
+  }
+
   return (
     <>
-      <Stack gap="sm">
+    <Stack gap="sm">
+      {((part.actions && part.actions.length > 0) || finished) && (
         <Flex direction={isSm ? "column" : "row"} gap="sm">
           <Group gap="sm" align="start" justify={"flex-start"}>
             <Avatar
@@ -203,58 +249,89 @@ const StoryPart = ({ part, isNew }: Props) => {
               />
             </Stack>
           </Box>
-        </Flex>
-        <Flex
-          ref={targetRef}
-          direction={isSm ? "column" : "row-reverse"}
-          justify="flex-start"
-          align="flex-end"
-          gap="sm"
-        >
-          <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
-          {finished && isNew && (
-            <Paper
-              radius="md"
-              p="sm"
-              bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
-              c={"white"}
-            >
-              The story has ended
-            </Paper>
+        </Flex>)}
+        {!part.actions || part.actions.length == 0 && (
+        <Flex direction={isSm ? "column" : "row"} gap="sm">
+          <Box maw={{ sm: "100%", md: "50%" }}>
+            <Stack gap="xs">
+              <Paper
+                radius="md"
+                p="sm"
+                bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+                c={"white"}
+              >
+                {textLoading && (
+                  <Loader color="white" size="sm" type="dots" p={0} m={0} />
+                )}
+                {text && text}
+              </Paper>
+              <ReadController
+                id={part.id}
+                text={text}
+                autoPlay={isNew && autoReadStorySections}
+              />
+            </Stack>
+          </Box>
+          {includeStoryImages && (
+            <Group gap="sm" align="start" justify="center">
+              {part.image ? (
+                <Image
+                  src={part.image}
+                  alt={part.keymoment}
+                  radius="md"
+                  w={240}
+                  h={240}
+                />
+              ) : (
+                imageLoading && <Skeleton radius="md" w={240} h={240} />
+              )}
+            </Group>
           )}
-          {part.actions &&
-            part.actions.map((action: TAction, i: number) => {
-              if (action.title.toLowerCase() === "motion capture") {
-                return (
-                  <Box key={i}>
-                    <ActionButton
-                      action={action}
-                      handleClick={() => openCapture()}
-                    />
-                    <MotionUploadModal
-                      display={captureModal}
-                      finalAction={closeCapture}
-                      handleMotion={(motion) => {
-                        handleActionClick(action, motion);
-                      }}
-                    />
-                  </Box>
-                );
-              } else {
-                return (
-                  <ActionButton
-                    key={i}
-                    action={action}
-                    handleClick={() => handleActionClick(action)}
-                  />
-                );
-              }
-            })}
-          {(actionLoading || outcome.isPending || ending.isPending) && (
-            <Loader color="gray" size="md" />
-          )}
-        </Flex>
-      </Stack>
+          <Group gap="sm" align="start" justify={"flex-start"}>
+            <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
+          </Group>
+        </Flex>)}
+      <Flex
+        ref={targetRef}
+        direction={isSm ? "column" : "row-reverse"}
+        justify="flex-start"
+        align="flex-end"
+        gap="sm"
+      >
+        {part.actions && part.actions.length > 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
+        {finished && isNew && (
+          <Paper
+            radius="md"
+            p="sm"
+            bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+            c={"white"}
+          >
+            The story has ended
+          </Paper>
+        )}
+        {part.actions &&
+          part.actions.map((action: TAction, i: number) => {
+            if (action.title.toLowerCase() === "motion capture") {
+              return  <ActionButton
+              key={i}
+              action={action}
+              handleClick={() => handleMotionClick(action)}
+            />
+            }
+            else {
+            return <ActionButton
+              key={i}
+              action={action}
+              handleClick={() => handleActionClick(action)}
+            />
+          }
+          })}
+        {(actionLoading || outcome.isPending || ending.isPending) && (
+          <Loader color="gray" size="md" />
+        )}
+      </Flex>
+    </Stack>
+    <ImprovPartUploadModal display={captureModal} finalAction={finalActionImprov} setGenerated={setStoryImprovGenerated}/>
     </>
   );
 };

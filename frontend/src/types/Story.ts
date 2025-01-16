@@ -37,6 +37,10 @@ export type TStoryPart = {
   actions?: TAction[];
   image?: string;
   analytics?: TAnalytics;
+  who?: string[];
+  where?: string;
+  objects?: string[];
+  improv?: boolean;
 };
 
 export type TStory = {
