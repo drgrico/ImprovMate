@@ -1,13 +1,12 @@
-import { Box, Button, Container, Flex, Grid, Modal, Select, Stack, Text } from '@mantine/core'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Box, Button, Container, Grid, Modal, Select, Stack, Text } from '@mantine/core'
+import { useRef, useState } from 'react'
 import useWebcam from '../hooks/useWebcam';
 import getAxiosInstance from '../utils/axiosInstance';
 import { useDisclosure, useInterval } from '@mantine/hooks';
 import Webcam from 'react-webcam';
-import ImageSlideshow from './ImageSlideshow';
 import { useMutation } from '@tanstack/react-query';
-import { appendStory, chooseAction, getStoryText, setCharacterNoImage, setPremise, useAdventureStore } from '../stores/adventureStore';
-import { createCallContext, createCallLanguage } from '../utils/llmIntegration';
+import { setCharacterNoImage, setPremise } from '../stores/adventureStore';
+import { createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
 import { TPremise } from '../types/Premise';
@@ -42,7 +41,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
     const instance = getAxiosInstance();
     const uploadMotion = useMutation({
         mutationKey: ['motion'],
-        mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: any }) => {
+        mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: { text: string, confidence: number } }) => {
             console.log("Hints used in StartingImprov: ", selectedHints);
 
             return instance.post('/story/startingimprov', {
@@ -72,7 +71,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
 
     const handleResult = useMutation({
         mutationKey: ["motion-part"],
-        mutationFn: (improv: any) => {
+        mutationFn: (improv: { title: string; desc: string; id: string; character: { character: string } }) => {
             console.log("Improv in handleResult: ", improv);
             
             return instance
@@ -240,7 +239,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                       {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
-                              <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />
+                              {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
                               </video>
                           </Box>
                       )}
@@ -303,7 +302,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                     storyImprov={false} 
                     selectedHints={selectedHints}
                     setSelectedHints={setSelectedHints}
-                    finalAction={closeHints} setEndStory={function (value: boolean): void {
+                    finalAction={closeHints} setEndStory={function (): void {
                         throw new Error('Function not implemented.');
                     }}/>
       </>

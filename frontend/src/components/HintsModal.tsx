@@ -1,7 +1,7 @@
 import getAxiosInstance from "../utils/axiosInstance";
 import { useMediaQuery } from "@mantine/hooks";
 import { Accordion, Box, Button, Container, Grid, Modal, Center, Loader } from "@mantine/core";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { FaPlus } from "react-icons/fa";
 import { createCallContext } from "../utils/llmIntegration";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ type Props = {
   ending: boolean;
   storyImprov: boolean;
   selectedHints: { [key: string]: string };
-  setSelectedHints: (val: { [key: string]: string }) => void;
+  setSelectedHints: (val: { [key: string]: string } | ((prev: { [key: string]: string }) => { [key: string]: string })) => void;
   setEndStory: (value: boolean) => void;
   finalAction: () => void;
 };
@@ -20,9 +20,8 @@ type Props = {
 const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHints = {}, setSelectedHints, setEndStory, finalAction }: Props) => {
   const instance = getAxiosInstance();
   const isMobile = useMediaQuery("(max-width: 50em)");
-  const [hintList, setHintList] = useState<any[]>([]);
+  const [hintList, setHintList] = useState<{ [key: string]: string }[]>([]);
   const [ending, setEnding] = useState<boolean>(startingEnding);
-  const sourceLanguage = "en";
   const targetLanguage = usePreferencesStore.use.language();
   // console.log("Preference language:", targetLanguage);
   
@@ -105,7 +104,7 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
   // }, [display, refetch]);
 
   const handleSelectHint = (category: string, hint: string) => {
-    setSelectedHints((prev) => ({
+    setSelectedHints((prev: { [key: string]: string }) => ({
       ...prev,
       [category]: hint,
     }));
@@ -226,17 +225,17 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
               ))}
           </Accordion>
         )}
-        <Box align="center" mt="md">
-        <Button align="center" disabled={isLoading} onClick={finalAction} mr="md">
+        <Box style={{ display: "flex", justifyContent: "center" }} mt="md">
+        <Button disabled={isLoading} onClick={finalAction} mr="md">
           Done
         </Button>
-        <Button align="center" disabled={isLoading} onClick={handleNewHints} mr="md">
+        <Button disabled={isLoading} onClick={handleNewHints} mr="md">
           New Hints
         </Button>
         {storyImprov && (
            <Button disabled={isLoading} onClick={toggleMode}>
            {
-              ending ? "End Story" : "Continue Story"
+              ending ? "Continue Story" : "End Story"
            }
          </Button>
         )}

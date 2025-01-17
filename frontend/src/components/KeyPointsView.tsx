@@ -1,7 +1,7 @@
 import getAxiosInstance from "../utils/axiosInstance";
 import { usePreferencesStore } from "../stores/preferencesStore";
 import { useQuery } from "@tanstack/react-query";
-import { TableData, Table, Loader, Center, Text } from "@mantine/core";
+import { Table, Loader, Center, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getKeyPointsTable, useKeyPointsState, checkFormat } from "../stores/adventureStore";
 
@@ -19,11 +19,11 @@ const KeyPointsView = () => {
   const [keyPoints, setKeyPoints] = useState(getKeyPointsTable());
   // console.log("useTableTranslation - content:", keyPoints);
 
-  const [toTranslate, setToTranslate] = useState();
+  const [toTranslate, setToTranslate] = useState<boolean>(false);
 
   useEffect(() => {
     setToTranslate(false);
-    const unsubscribe = useKeyPointsState.subscribe((state) => {
+    const unsubscribe = useKeyPointsState.subscribe(() => {
       setKeyPoints(getKeyPointsTable());
       setToTranslate(true);
       // console.log("useTableTranslation - toTranslate:", toTranslate);
@@ -53,11 +53,11 @@ const KeyPointsView = () => {
           // console.log("useTableTranslation - jsonString:", jsonString);
           // const translatedKeyPoints: TableData = JSON.parse(jsonString); 
           const text = res.data.data.text;
-          let translatedKeyPoints: TableData;
-          if (text && text.body && text.head) {
-            translatedKeyPoints = text;
-          } else if (text && text.corpo && text.testa) {
-            translatedKeyPoints = {body: text.corpo, head: text.testa};
+          let translatedKeyPoints: { head: string[]; body: (string | string[])[][] };
+          if (text && text.body && Array.isArray(text.head)) {
+            translatedKeyPoints = { body: text.body, head: text.head as string[] };
+          } else if (text && text.corpo && Array.isArray(text.testa)) {
+            translatedKeyPoints = { body: text.corpo, head: text.testa as string[] };
           }
           else {
             throw new Error("Invalid translation response format");

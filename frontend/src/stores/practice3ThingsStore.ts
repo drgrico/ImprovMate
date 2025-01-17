@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import { createSelectors } from "../utils/createSelectors";
-import { TAction, TStory, TStoryPart } from "../types/Story";
+import { TStory, TStoryPart } from "../types/Story";
 
 const initialState = {
   id: null as string | null,

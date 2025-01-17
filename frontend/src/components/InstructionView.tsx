@@ -15,7 +15,7 @@ import {
 import { useAdventureStore } from "../stores/adventureStore";
 import { initSession, instructionsLang, useSessionStore } from "../stores/sessionStore";
 import getAxiosInstance from "../utils/axiosInstance";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
 import DrawingUploadModal from "./DrawingUploadModal";
 import PremiseSelectModal from "./PremiseSelectModal";
@@ -29,7 +29,7 @@ type InstructionViewProps = {
   setIsStarted3Things: (mode: boolean) => void;
 }
 
-const InstructionView = ({ setGameMode, selectedHints, setSelectedHints, setIsStartedEndings, setIsStarted3Things } : InstructionViewProps) => {
+const InstructionView = ({ setGameMode, setIsStartedEndings, setIsStarted3Things } : InstructionViewProps) => {
   const instance = getAxiosInstance();
   const session = useSessionStore.use.id();
   const character = useAdventureStore.use.character();

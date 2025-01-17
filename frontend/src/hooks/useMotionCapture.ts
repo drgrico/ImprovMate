@@ -24,6 +24,7 @@ const useMotionCapture = () => {
   }, []);
 
   const startRecording = useCallback(() => {
+    console.log("Start recording");
     if (webcamRef.current && webcamRef.current.video) {
       const stream = webcamRef.current.video.srcObject as MediaStream;
       mediaRecorderRef.current = new MediaRecorder(stream);
@@ -34,6 +35,7 @@ const useMotionCapture = () => {
       };
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(chunks.current, { type: "video/mp4" });
+        console.log("Video blob:", blob);
         setVideoBlob(blob);
       };
       mediaRecorderRef.current.start();
@@ -42,6 +44,7 @@ const useMotionCapture = () => {
   }, [webcamRef]);
 
   const stopRecording = useCallback(() => {
+    console.log("Stop recording");
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);

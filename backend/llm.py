@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 import requests
 import sys
 import random
+import cv2
+import base64
+import numpy as np
+import tempfile
 
 from langcodes import Language
 
@@ -404,7 +408,6 @@ Here is an example JSON object:
         # Randomly select a setting from the list
         setting = random.choice(settings)
         # convergence = random.choice([setting, "Direct the story towards the premise."])
-
         messages = [
             {
                 "role": "system",
@@ -824,7 +827,6 @@ You are a stunt choreographer. Your task is to describe the most important motio
                         "text": """
 The description should relate to the ongoing story, as the movement performed continues or enhances the narrative. This is the story told so far for context: %s.
 Using JSON format, output: title, desctiption, emotion, action, keywords.
-Do not pay attention to the perform performing the actio nand focus on the action itself.
 Example:
 {
     "title": "Fist fighting",
@@ -845,9 +847,9 @@ Example:
                     "url": f'{frame}', "detail": "low"}},
                     frames)  
                 ],
-            },
+            }
         ]
-
+        
         data = self.send_gpt4_request(messages)
         return self.__get_json_data(data)
 
@@ -1551,7 +1553,9 @@ Example JSON object:
                 logger.debug(
                     f"Successfuly sent 'vision' LLM request with model={self.vision}"
                 )
-                logger.debug(f"Response = {response.json()}")
+                logger.debug(
+                    f"Response = {response.json()}"
+                )
 
             jresponse = response.json()
             return jresponse["choices"][0]["message"]["content"]

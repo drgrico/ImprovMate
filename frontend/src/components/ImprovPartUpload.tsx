@@ -5,7 +5,7 @@ import getAxiosInstance from '../utils/axiosInstance';
 import { useDisclosure, useInterval } from '@mantine/hooks';
 import Webcam from 'react-webcam';
 import { useMutation } from '@tanstack/react-query';
-import { appendStory, chooseAction, getLastKeyPoint, getStoryText, setFinished, useAdventureStore, useKeyPointsState } from '../stores/adventureStore';
+import { appendStory, chooseAction, getLastKeyPoint, getStoryText, setFinished, useAdventureStore } from '../stores/adventureStore';
 import { createCallContext, createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
@@ -42,7 +42,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
     const instance = getAxiosInstance();
     const uploadImprov = useMutation({
         mutationKey: ['improv'],
-        mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: any }) => {
+        mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: string }) => {
             const story = getStoryText()?.join(" ");
 
             return instance.post('/story/process_improv', {
@@ -77,7 +77,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
 
     const handleResult = useMutation({
         mutationKey: ["improv-part"],
-        mutationFn: (improv: any) => {
+        mutationFn: (improv: { [key: string]: string | number | boolean }) => {
             console.log("Improv in handleResult: ", improv);
             const story = getStoryText()?.join(" ");
 
@@ -103,7 +103,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
 
     const handleEnding = useMutation({
         mutationKey: ["motion-part"],
-        mutationFn: (improv: any) => {
+        mutationFn: (improv: { [key: string]: string | number | boolean }) => {
             console.log("Improv in handleResult: ", improv);
             const story = getStoryText()?.join(" ");
 
@@ -252,7 +252,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
                       {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
-                              <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />
+                              {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
                               </video>
                           </Box>
                       )}

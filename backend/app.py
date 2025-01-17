@@ -16,14 +16,14 @@ load_dotenv()
 
 # Specify the static folder path
 app = Flask(__name__)
-CORS(app)
-
+# CORS(app)
+CORS(app, origins=["*"])  # Consente tutte le origini
 
 # Get the environment variables
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ORG_ID = os.environ.get("OPENAI_ORG_ID")
 
-PORT = os.environ.get("FLASK_PORT", 5000)
+PORT = os.environ.get("FLASK_PORT", 8080)
 HOST = os.environ.get("FLASK_HOST", "0.0.0.0")
 DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1", "t")
 LOGGER = os.environ.get("LOGGER", "False").lower() in ("true", "1", "t")
@@ -31,6 +31,8 @@ STORAGE_PATH = "static"
 
 if LOGGER:
     logger = logger_setup("app", os.path.join(LOG_FOLDER, "app.log"), debug=DEBUG)
+    logger.debug("Logger initialized!")
+    # logger.debug(f"Environment variables: {os.environ}")
 else:
     logger = None
 
@@ -38,6 +40,10 @@ else:
 # Initialize the storyteller
 llm = Storyteller(OPENAI_API_KEY, OPENAI_ORG_ID)
 
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Hello, user! This is ImprovMate API!"})
 
 @app.route("/api")
 def index():
@@ -271,7 +277,7 @@ def init_hints_gen():
 
 
 @app.route("/api/story/part", methods=["POST"])
-def part_gen():
+def storypart_gen():
     try:
         data = request.get_json()
         if not data:
@@ -409,9 +415,8 @@ def actions_gen():
         return jsonify({"error": str(e)}), 500
     
     
-
 @app.route("/api/story/motion", methods=["POST"])
-def process_motion():
+def process_motion(): 
     try:
         data = request.get_json()
         if not data:
@@ -695,7 +700,6 @@ def premise_from_improv():
             return jsonify(type="error", message="No data found!", status=400)
         
         motion = {"description": desc, "emotion": emot, "keywords": keyw}               
-
         if logger:
             logger.debug(f"Transcript and motion received by premise_from_improv(): {transcript} {motion}")  
     

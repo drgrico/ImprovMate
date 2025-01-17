@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Image,
   Box,
@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery, useScrollIntoView } from "@mantine/hooks";
 import ReadController from "./ReadController";
-import { TAction, TMotion, TStoryPart } from "../types/Story";
+import { TAction, TStoryPart } from "../types/Story";
 import ActionButton from "./ActionButton";
 import getAxiosInstance from "../utils/axiosInstance";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -104,7 +104,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
 
   const outcome = useMutation({
     mutationKey: ["story-part"],
-    mutationFn: (context: any) => {
+    mutationFn: (context: { story: string; premise?: string; action?: TAction }) => {
       console.log("StoryPart - Generating new story part: ", context);
       scrollIntoView();
       return instance
@@ -118,7 +118,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
 
   const ending = useMutation({
     mutationKey: ["story-end"],
-    mutationFn: (context: any) => {
+    mutationFn: (context: { story: string }) => {
       return instance
         .post("/story/end", createCallContext(context))
         .then((res) => res.data.data);
@@ -129,10 +129,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
     },
   });
 
-  const handleActionClick = (
-    action: TAction,
-    motion: TMotion | null = null
-  ) => {
+  const handleActionClick = (action: TAction) => {
     if (!action.active) return;
     chooseAction(action);
     const story = getStoryText()?.join(" ");
@@ -144,7 +141,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
     } else {
       outcome.mutate({
         premise: useAdventureStore.getState().premise?.desc,
-        action: motion ?? action,
+        action: action,
         story: story,
       });
     }
@@ -157,8 +154,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
     }
   }, [isNew, text]);
 
-  const [captureModal, { open: openCapture, close: closeCapture }] =
-    useDisclosure();
+  const [captureModal, { open: openCapture, close: closeCapture }] = useDisclosure();
 
   const handleMotionClick =  (action: TAction) => {
     if (!action.active) return;

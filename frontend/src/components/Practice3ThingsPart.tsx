@@ -1,5 +1,4 @@
 import {
-  Image,
   Box,
   Flex,
   Paper,
@@ -8,32 +7,16 @@ import {
   Group,
   Stack,
   Loader,
-  Skeleton,
   TextInput,
 } from "@mantine/core";
 import { useMediaQuery, useScrollIntoView } from "@mantine/hooks";
 import ReadController from "./ReadController";
-import { TAction, TStoryPart } from "../types/Story";
+import { TStoryPart } from "../types/Story";
 import ActionButton from "./ActionButton";
-import getAxiosInstance from "../utils/axiosInstance";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  appendStory,
-  chooseAction,
-  clear3ThingsStore,
-  getLastStoryText,
-  printState,
-  setFinished,
-  tryAgain,
-  usePractice3ThingsStore,
-} from "../stores/practice3ThingsStore";
-import { resetPreferences, usePreferencesStore } from "../stores/preferencesStore";
+import { usePractice3ThingsStore} from "../stores/practice3ThingsStore";
+import { usePreferencesStore } from "../stores/preferencesStore";
 import useTranslation from "../hooks/useTranslation";
-import { createCallContext } from "../utils/llmIntegration";
-import { resetSession, useSessionStore } from "../stores/sessionStore";
-import { useDisclosure } from "@mantine/hooks";
-import PracticeEndImprovModal from "./PracticeEndImprovModal";
-import { clearStore } from "../stores/adventureStore";
+import { useSessionStore } from "../stores/sessionStore";
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -44,7 +27,6 @@ type Props = {
 };
 
 const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
-  const instance = getAxiosInstance();
   const { colorScheme } = useMantineColorScheme();
   const isSm = useMediaQuery("(max-width: 48em)");
   const { targetRef, scrollIntoView } = useScrollIntoView<HTMLDivElement>({
@@ -84,7 +66,7 @@ const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
     validateInput();
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: { key: string; }) => {
     if (event.key === 'Enter') {
         if (validateInput()) {
             // setValue('');

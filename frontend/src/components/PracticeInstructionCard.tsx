@@ -1,7 +1,5 @@
-import { TPremise } from "../types/Premise";
-import { Card, Loader, Spoiler, Text } from "@mantine/core";
+import { Card, Text } from "@mantine/core";
 import ReadController from "./ReadController";
-import useTranslation from "../hooks/useTranslation";
 import { usePreferencesStore } from "../stores/preferencesStore";
 
 type Props = {
@@ -29,7 +27,7 @@ const PracticeInstructionCard = ({ gameMode }: Props) => {
   return (
     <Card shadow="md" my={8} padding="sm" radius="md">
       <Card.Section mb="sm">
-        <Text size="md" fw={500} p="xs" bg="violet" c="white" align="center">
+        <Text size="md" fw={500} p="xs" bg="violet" c="white" style={{align: "center"}}>
           {shorttext}
         </Text>
       </Card.Section>

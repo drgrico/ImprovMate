@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import getAxiosInstance from "../utils/axiosInstance";
 import { startStory, useAdventureStore } from "../stores/adventureStore";
 import { createCallContext } from "../utils/llmIntegration";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const StoryView = () => {
   const instance = getAxiosInstance();

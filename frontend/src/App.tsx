@@ -4,14 +4,10 @@ import {
   Box,
   Burger,
   Button,
-  Center,
   Flex,
   FloatingIndicator,
   Group,
-  Loader,
   ScrollArea,
-  Table,
-  TableData,
   Tabs,
   Text,
   rem,
@@ -22,11 +18,11 @@ import { FaStar } from "react-icons/fa";
 import StoryView from "./components/StoryView";
 import { ColorSchemeToggle } from "./components/ColorSchemeToggle/ColorSchemeToggle";
 import { resetSession, useSessionStore } from "./stores/sessionStore";
-import { useAdventureStore, clearStore, getKeyPointsTable } from "./stores/adventureStore";
+import { useAdventureStore, clearStore } from "./stores/adventureStore";
 import { clearEndStore } from "./stores/practiceEndingsStore";
 import { clear3ThingsStore } from "./stores/practice3ThingsStore";
 import CharacterCard from "./components/CharacterCard";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import PremiseCard from "./components/PremiseCard";
 import PreferenceModal from "./components/PreferenceModal/PreferenceModal";
 import { resetPreferences } from "./stores/preferencesStore";
@@ -196,7 +192,7 @@ function App() {
             <Tabs.Panel value="2">
               <Flex direction="column">
                 {isCharacter && (
-                  <CharacterCard image={image} character={character!} />
+                  <CharacterCard image={image!} character={character!} />
                 )}
                 {isPremise && <PremiseCard premise={premise!} />}
               </Flex>

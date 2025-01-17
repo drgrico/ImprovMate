@@ -84,7 +84,9 @@ export const setPremise = (premise: TPremise) => {
 
 export const startStory = (story: TStory) => {
   if (story.parts.length > 0) { 
-    addKeyPoints([story.parts[0].who, story.parts[0].where, story.parts[0].objects]);
+    if (story.parts[0].who && story.parts[0].where && story.parts[0].objects) {
+      addKeyPoints([story.parts[0].who.join(", "), story.parts[0].where, story.parts[0].objects.join(", ")]);
+    }
   }
   useAdventureStore.setState(() => {
     return {
@@ -102,7 +104,9 @@ export const appendStory = (part: TStoryPart, improv: boolean) => {
   else {
     part.improv = false;
   }
-  addKeyPoints([part.who, part.where, part.objects]);
+  if (part.who && part.where && part.objects) {
+    addKeyPoints([part.who.join(", "), part.where, part.objects.join(", ")]);
+  }
   useAdventureStore.setState((state) => {
     if (!state.story) return state;
     return {
@@ -243,10 +247,10 @@ export const getLastKeyPoint = () => {
   return kp.body?.[kp.body.length - 1];
 }
 
-export const checkFormat = (kp: any) => {
+export const checkFormat = (kp: { head: string[]; body: (string | string[])[][] }) => {
   return {
     head: kp.head,
-    body: kp.body?.map((row) => [
+    body: kp.body?.map((row: (string | string[])[]) => [
       row[0],
       Array.isArray(row[1]) ? row[1].join(", ") : row[1],
       row[2],
@@ -255,7 +259,7 @@ export const checkFormat = (kp: any) => {
   };
 }
 
-export const addKeyPoints = (keypoints: any) => {
+export const addKeyPoints = (keypoints: [string, string, string]) => {
   console.log("Adding keypoint: ", keypoints);
   useKeyPointsState.setState((state) => {
     return {

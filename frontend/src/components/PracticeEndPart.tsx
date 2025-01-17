@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import {
-  Image,
   Box,
   Flex,
   Paper,
@@ -9,31 +8,26 @@ import {
   Group,
   Stack,
   Loader,
-  Skeleton,
 } from "@mantine/core";
 import { useMediaQuery, useScrollIntoView } from "@mantine/hooks";
 import ReadController from "./ReadController";
 import { TAction, TStoryPart } from "../types/Story";
 import ActionButton from "./ActionButton";
 import getAxiosInstance from "../utils/axiosInstance";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
   appendStory,
   chooseAction,
-  clearEndStore,
   getLastStoryText,
   printState,
-  setFinished,
   tryAgain,
   usePracticeEndingsStore,
 } from "../stores/practiceEndingsStore";
-import { resetPreferences, usePreferencesStore } from "../stores/preferencesStore";
+import { usePreferencesStore } from "../stores/preferencesStore";
 import useTranslation from "../hooks/useTranslation";
-import { createCallContext } from "../utils/llmIntegration";
-import { resetSession, useSessionStore } from "../stores/sessionStore";
+import { useSessionStore } from "../stores/sessionStore";
 import { useDisclosure } from "@mantine/hooks";
 import PracticeEndImprovModal from "./PracticeEndImprovModal";
-import { clearStore } from "../stores/adventureStore";
 
 type Props = {
   part: TStoryPart;
