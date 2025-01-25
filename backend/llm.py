@@ -635,18 +635,39 @@ In the style of: {style}.
         return {"prompt": prompt, "image_url": result}
 
     
-    def generate_character_improv(self, transcript, motion): #TODO: shorter backstory? do we need image part?
-        messages = [
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": """
+    def generate_character_improv(self, transcript, motion, hints=[], language="en", end=False): #TODO: shorter backstory? do we need image part? #TODO: remove end parameter?
+        if logger:
+            logger.debug(f"Generating character from improv: {transcript}, {motion}, {hints}.")
+        
+        sys_msg = """
 You are a helpful assistant. Help me generate the character of the story starting from the dialogue and motion performed by the actor.
 1. Name the main character in the story.
 2. Write a short backstory about the character in the story.
-3. Return as a JSON object. 
+"""
+        if len(hints) > 0:
+            if end:
+                type_of_end = str(hints).split(':')[0].strip().replace("{", "")
+                hint = str(hints).split(':')[1].strip().replace("}", "")
+                sys_msg += f"3 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+            else: 
+                sys_msg += f"3 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+                if language == "it":
+                    if hints.get("chi"):
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("dove"):
+                        sys_msg += "- 'dove': Location where the story takes place.\n"
+                    if hints.get("cosa"):
+                        sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
+                else: 
+                    if hints.get("who"):
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("where"):
+                        sys_msg += "- 'where': Location where the story takes place.\n"
+                    if hints.get("what"):
+                        sys_msg += "- 'what': Event used as the starting point of the story.\n"
+
+        sys_msg += """
+4. Return as a JSON object. 
     - No styling and all in ascii characters.
     - Use double quotes for keys and values.
 
@@ -676,7 +697,13 @@ Here is an example JSON object:
     }
 }
 """
-                        % (),
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": sys_msg,
                     }
                 ],
             },
@@ -990,19 +1017,19 @@ Explain how these movements connect with the improvisational flow and transform 
             if end:
                 type_of_end = str(hints).split(':')[0].strip().replace("{", "")
                 hint = str(hints).split(':')[1].strip().replace("}", "")
-                sys_msg += f"3 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}\n"
+                sys_msg += f"3 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
             else: 
-                sys_msg += f"3 - As context for the improv performance, use the following hints to guide your analysis: {hints}\n"
+                sys_msg += f"3 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
                 if language == "it":
                     if hints.get("chi"):
-                        sys_msg += "- 'chi': Character used by the performer as the protagonist.\n"
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
                     if hints.get("dove"):
                         sys_msg += "- 'dove': Location where the story takes place.\n"
                     if hints.get("cosa"):
                         sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
                 else: 
                     if hints.get("who"):
-                        sys_msg += "- 'who': Character used by the performer as the protagonist.\n"
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
                     if hints.get("where"):
                         sys_msg += "- 'where': Location where the story takes place.\n"
                     if hints.get("what"):

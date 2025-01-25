@@ -68,7 +68,7 @@ function App() {
   const [isStarted3Things, setIsStarted3Things] = useState<boolean>(false);
 
   const [tabRootRef, setTabRootRef] = useState<HTMLDivElement | null>(null);
-  const [tabValue, setTabValue] = useState<string | null>('2');
+  const [tabValue, setTabValue] = useState<string | null>('1');
   const [tabControlsRefs, setTabControlsRefs] = useState<Record<string, HTMLButtonElement | null>>({});
   const setTabControlRef = (val: string) => (node: HTMLButtonElement) => {
     tabControlsRefs[val] = node;
@@ -239,7 +239,7 @@ function App() {
             is a project by{" "}
             <Button
               component={Link}
-              to="https://github.com/tomfluff"
+              to="https://github.com/drgrico"
               replace={false}
               radius="lg"
               size="compact-sm"
@@ -249,7 +249,7 @@ function App() {
               px="sm"
               leftSection={<FaStar />}
             >
-              tomfluff
+              drgrico
             </Button>
           </Box>
         </Flex>

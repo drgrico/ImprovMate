@@ -75,7 +75,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
             console.log("Improv in handleResult: ", improv);
             
             return instance
-                .post("/story/improvpremise", improv)
+                .post("/story/improvpremise", {improv: improv, hints: selectedHints, language: language, end: false})
                 .then((res) => res.data.data);
             },
         onSuccess: (data) => {

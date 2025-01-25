@@ -675,25 +675,26 @@ def premise_from_improv():
         #         logger.error("No data found in the request!")
         #     return jsonify(type="error", message="No data found!", status=400)
         
-        transcript = data.get("data").get("transcript")
+        improv = data.get("improv")
+        transcript = improv.get("data").get("transcript")
         # if not transcript:
         #     if logger:
         #         logger.error("No transcript found in the request!")
         #     return jsonify(type="error", message="No data found!", status=400)
         
-        desc = data.get("data").get("description")
+        desc = improv.get("data").get("description")
         if not desc:
             if logger:
                 logger.error("No description found in the request!")
             return jsonify(type="error", message="No data found!", status=400)
         
-        emot = data.get("data").get("emotion")
+        emot = improv.get("data").get("emotion")
         if not emot:
             if logger:
                 logger.error("No emotion found in the request!")
             return jsonify(type="error", message="No data found!", status=400)
         
-        keyw = data.get("data").get("keywords")
+        keyw = improv.get("data").get("keywords")
         if not keyw:
             if logger:
                 logger.error("No keywords found in the request!")
@@ -703,7 +704,11 @@ def premise_from_improv():
         if logger:
             logger.debug(f"Transcript and motion received by premise_from_improv(): {transcript} {motion}")  
     
-        character = llm.generate_character_improv(transcript, motion)    
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", False)
+
+        character = llm.generate_character_improv(transcript, motion, hints, language, end)    
         result = llm.generate_premise_improv(transcript, motion, character)
         result["character"] = character
         # image = llm.generate_character_image_improv(character)
