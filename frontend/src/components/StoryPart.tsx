@@ -177,7 +177,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
           premise: useAdventureStore.getState().premise?.desc,
           story: story,
         });
-      }, 10000); // 10-second delay (to give time to generate previous image) TODO: decrease?
+      }, 5000); // 10-second delay (to give time to generate previous image) TODO: decrease?
     }
   }, [storyImprovGenerated]);
 

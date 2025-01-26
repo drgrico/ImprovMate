@@ -729,6 +729,172 @@ def premise_from_improv():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/story/improv_all", methods=["POST"])
+def character_premise_from_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by premise_from_improv(): {data}")
+
+        audio = data.get("audio").get("audio")
+        if logger:
+            logger.debug(f"Audio received by premise_from_improv(): {audio}")
+        language = data.get("audio").get("language")
+        if not language:
+            if logger:
+                logger.error("No language found in the request!")
+            return jsonify(type="error", message="No language found!", status=400)
+        
+        audio_data = base64.b64decode(audio.split(",")[1])
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"
+        
+        result = llm.speech_to_text(audio_file, language)
+        
+        result_dict = result.to_dict() if hasattr(result, 'to_dict') else result.__dict__
+        if logger:
+            logger.debug(f"Transcript: {result}")
+
+        frames = data.get("frames")
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", False)
+
+        result = llm.generate_character_premise_improv(result_dict, frames, hints, language, end)
+        result["id"] = uuid.uuid4()
+        
+        if logger:
+            logger.debug(f"Premise and character generated: {result}")
+        return jsonify(
+            type="success",
+            message="Story part generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/story/story_improv_all", methods=["POST"])
+def story_from_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by premise_from_improv(): {data}")
+
+        audio = data.get("audio").get("audio")
+        if logger:
+            logger.debug(f"Audio received by premise_from_improv(): {audio}")
+        language = data.get("audio").get("language")
+        if not language:
+            if logger:
+                logger.error("No language found in the request!")
+            return jsonify(type="error", message="No language found!", status=400)
+        
+        audio_data = base64.b64decode(audio.split(",")[1])
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"
+        
+        result = llm.speech_to_text(audio_file, language)
+        
+        result_dict = result.to_dict() if hasattr(result, 'to_dict') else result.__dict__
+        if logger:
+            logger.debug(f"Transcript: {result}")
+
+        frames = data.get("frames")
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", False)
+        story = data.get("story")
+        premise = data.get("premise")
+        keypoint = data.get("keypoint")
+
+        result = llm.generate_story_improv(result_dict, frames, story, premise, keypoint, hints, language, end)
+        result["id"] = uuid.uuid4()
+        
+        if logger:
+            logger.debug(f"Story part generated: {result}")
+        return jsonify(
+            type="success",
+            message="Story part generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/api/story/end_improv_all", methods=["POST"])
+def end_from_improv():
+    try:
+        data = request.get_json()
+        if not data:
+            if logger:
+                logger.error("No data found in the request!")
+            return jsonify(type="error", message="No data found!", status=400)
+        if logger:
+            logger.debug(f"Data received by premise_from_improv(): {data}")
+
+        audio = data.get("audio").get("audio")
+        if logger:
+            logger.debug(f"Audio received by premise_from_improv(): {audio}")
+        language = data.get("audio").get("language")
+        if not language:
+            if logger:
+                logger.error("No language found in the request!")
+            return jsonify(type="error", message="No language found!", status=400)
+        
+        audio_data = base64.b64decode(audio.split(",")[1])
+        audio_file = io.BytesIO(audio_data)
+        audio_file.name = "audio.webm"
+        
+        result = llm.speech_to_text(audio_file, language)
+        
+        result_dict = result.to_dict() if hasattr(result, 'to_dict') else result.__dict__
+        if logger:
+            logger.debug(f"Transcript: {result}")
+
+        frames = data.get("frames")
+        hints = data.get("hints")
+        language = data.get("language", None)
+        end = data.get("end", True)
+        story = data.get("story")
+        premise = data.get("premise")
+        keypoint = data.get("keypoint")
+        exercise = data.get("exercise")
+
+        if exercise:
+            result = llm.generate_ending_improv(result_dict, frames, story, premise, keypoint, hints, language, end)
+        else: 
+            result = llm.generate_ending_exercise_improv(result_dict, frames, story, hints, language, end)
+        result["id"] = uuid.uuid4()
+        
+        if logger:
+            logger.debug(f"Ending generated: {result}")
+        return jsonify(
+            type="success",
+            message="Ending generated!",
+            status=200,
+            data={**result},
+        )
+    except Exception as e:
+        if logger:
+            logger.error(str(e))
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/story/character_image", methods=["POST"])
 def gen_character_img():
     try:

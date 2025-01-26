@@ -5,11 +5,11 @@ import getAxiosInstance from '../utils/axiosInstance';
 import { useDisclosure, useInterval } from '@mantine/hooks';
 import Webcam from 'react-webcam';
 import { useMutation } from '@tanstack/react-query';
-import { appendStory, chooseAction, getLastKeyPoint, getStoryText, setFinished, useAdventureStore } from '../stores/adventureStore';
-import { createCallContext, createCallLanguage } from '../utils/llmIntegration';
+import { appendStory, chooseAction, getLastKeyPoint, getStoryText, printState, setFinished, useAdventureStore } from '../stores/adventureStore';
+import { createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
-import { usePreferencesStore } from "../stores/preferencesStore";
+import { TStoryPart } from '../types/Story';
 
 type Props = {
     display: boolean;
@@ -37,78 +37,144 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
     const [hintsModal, { open: openHints, close: closeHints }] = useDisclosure();
     const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
     const [endStory, setEndStory] = useState(false);
-    const language = usePreferencesStore.use.language();
 
     const instance = getAxiosInstance();
-    const uploadImprov = useMutation({
-        mutationKey: ['improv'],
-        mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: string }) => {
-            const story = getStoryText()?.join(" ");
+    // const uploadImprov = useMutation({
+    //     mutationKey: ['improv'],
+    //     mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: string }) => {
+    //         const story = getStoryText()?.join(" ");
 
-            return instance.post('/story/process_improv', {
-                frames, audioResult: audioResult, story: story, hints: selectedHints, language: language, end: false,
-            }).then((res) => res.data);
-        },
-        onSuccess: (data) => {
-            console.log("Motion uploaded", data);
-            setFrames([]);
+    //         return instance.post('/story/process_improv', {
+    //             frames, audioResult: audioResult, story: story, hints: selectedHints, language: language, end: false,
+    //         }).then((res) => res.data);
+    //     },
+    //     onSuccess: (data) => {
+    //         console.log("Motion uploaded", data);
+    //         setFrames([]);
             
-            if (endStory) {
-                handleEnding.mutate(data);
-            }
-            else {
-                handleResult.mutate(data);
-            }
-            // finalAction(); //Moved to handleResult
-        }
-    });
+    //         if (endStory) {
+    //             handleEnding.mutate(data);
+    //         }
+    //         else {
+    //             handleResult.mutate(data);
+    //         }
+    //         // finalAction(); //Moved to handleResult
+    //     }
+    // });
 
-    const speechToText = useMutation({
-        mutationKey: ['speech-to-text'],
-        mutationFn: (audioBlob: string) => {
-            return instance.post('/story/speech-to-text',
-                createCallLanguage(audioBlob)).then((res) => res.data);
-        },
-        onSuccess: (data) => {
-            setAudioChunks([]);
-            console.log("Speech-to-text result:", data);
-        }
-    });
+    // const speechToText = useMutation({
+    //     mutationKey: ['speech-to-text'],
+    //     mutationFn: (audioBlob: string) => {
+    //         return instance.post('/story/speech-to-text',
+    //             createCallLanguage(audioBlob)).then((res) => res.data);
+    //     },
+    //     onSuccess: (data) => {
+    //         setAudioChunks([]);
+    //         console.log("Speech-to-text result:", data);
+    //     }
+    // });
 
-    const handleResult = useMutation({
-        mutationKey: ["improv-part"],
-        mutationFn: (improv: { [key: string]: string | number | boolean }) => {
-            console.log("Improv in handleResult: ", improv);
+    // const handleResult = useMutation({
+    //     mutationKey: ["improv-part"],
+    //     mutationFn: (improv: { [key: string]: string | number | boolean }) => {
+    //         console.log("Improv in handleResult: ", improv);
+    //         const story = getStoryText()?.join(" ");
+
+    //         return instance
+    //             .post("/story/improvpart", 
+    //                 createCallContext({...{
+    //                     improv: improv, 
+    //                     story: story, 
+    //                     premise: useAdventureStore.getState().premise?.desc,
+    //                     keypoint: getLastKeyPoint()
+    //                 }}))
+    //             .then((res) => res.data.data);
+    //         },
+    //     onSuccess: (data) => {
+    //         console.log("Part generated with improv: ", data);
+    //         appendStory(data, true);
+    //         setSelectedHints({}); //TODO: put it after usage, here ok?
+    //         chooseAction(null); //TODO: do I need this?
+    //         setGenerated(true);
+    //         finalAction();    
+    //     },
+    // });
+
+    // const handleEnding = useMutation({
+    //     mutationKey: ["motion-part"],
+    //     mutationFn: (improv: { [key: string]: string | number | boolean }) => {
+    //         console.log("Improv in handleResult: ", improv);
+    //         const story = getStoryText()?.join(" ");
+
+    //         return instance
+    //             .post("/story/end_story_improv", {story: story, improv: improv})
+    //             .then((res) => res.data.data);
+    //         },
+    //     onSuccess: (data) => {
+    //         console.log("Part generated with improv: ", data);
+    //         appendStory(data, false);
+    //         setSelectedHints({}); //TODO: put it after usage, here ok?
+    //         chooseAction(null); //TODO: do I need this?
+    //         setGenerated(false);
+    //         setFinished();
+    //         finalAction();          
+    //     },
+    // });
+
+    const handleUploadAll = useMutation({
+        mutationKey: ["story-improv-upload-all"],
+        mutationFn: ({ audio, frames }: { audio: string, frames: string[] }) => {
+            // console.log("Improv in handleResult: ", improv);
+            console.log("Selected hints in handleUploadAll: ", selectedHints);
             const story = getStoryText()?.join(" ");
-
+            
             return instance
-                .post("/story/improvpart", 
-                    createCallContext({...{
-                        improv: improv, 
-                        story: story, 
-                        premise: useAdventureStore.getState().premise?.desc,
-                        keypoint: getLastKeyPoint()
-                    }}))
+                .post("/story/story_improv_all", {
+                    audio: createCallLanguage(audio), 
+                    frames: frames, 
+                    hints: selectedHints, 
+                    end: false,
+                    story: story,
+                    premise: useAdventureStore.getState().premise?.desc,
+                    keypoint: getLastKeyPoint()
+                })
                 .then((res) => res.data.data);
             },
         onSuccess: (data) => {
             console.log("Part generated with improv: ", data);
-            appendStory(data, true);
+            const newPart: TStoryPart = data as TStoryPart;
+            if (newPart) {
+                appendStory(newPart, true);
+            } else {
+                console.error("Received data is not in the expected format:", data);
+            }
+            console.log("Story so far: ", getStoryText());
+            printState();
             setSelectedHints({}); //TODO: put it after usage, here ok?
             chooseAction(null); //TODO: do I need this?
             setGenerated(true);
-            finalAction();    
+            finalAction();
         },
     });
 
-    const handleEnding = useMutation({
-        mutationKey: ["motion-part"],
-        mutationFn: (improv: { [key: string]: string | number | boolean }) => {
-            console.log("Improv in handleResult: ", improv);
+    const handleEndAll = useMutation({
+        mutationKey: ["ending-upload-all"],
+        mutationFn: ({ audio, frames }: { audio: string, frames: string[] }) => {
+            // console.log("Improv in handleResult: ", improv);
+            console.log("Selected hints in handleEndAll: ", selectedHints);
             const story = getStoryText()?.join(" ");
-
+            
             return instance
-                .post("/story/end_story_improv", {story: story, improv: improv})
+                .post("/story/end_improv_all", {
+                    audio: createCallLanguage(audio), 
+                    frames: frames, 
+                    hints: selectedHints, 
+                    end: true,
+                    story: story,
+                    premise: useAdventureStore.getState().premise?.desc,
+                    keypoint: getLastKeyPoint(),
+                    exercise: false,
+                })
                 .then((res) => res.data.data);
             },
         onSuccess: (data) => {
@@ -118,7 +184,7 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
             chooseAction(null); //TODO: do I need this?
             setGenerated(false);
             setFinished();
-            finalAction();          
+            finalAction();    
         },
     });
 
@@ -174,7 +240,22 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
         mediaRecorder.current?.stop();
     }
 
-    const handleUpload = async() => {
+    // const handleUpload = async() => {
+    //     console.log(`handleUpload: frames ${frames.length}, audioChunks ${audioChunks.length}`);
+    //     if (frames.length === 0 || audioChunks.length == 0) return;
+        
+    //     const audioChunk = audioChunks[0];
+    //     console.log("Audio chunk:", audioChunk);
+    //     const base64Audio = await convertBlobToBase64(audioChunk);
+
+    //     const audioResult = await speechToText.mutateAsync(base64Audio);
+    //     const motionResult = await uploadImprov.mutateAsync({frames, audioResult}); //ADD audioResult to the motionResult??
+        
+    //     console.log("Motion result: ", motionResult);
+    //     console.log("Audio result: ", audioResult);
+    // }
+
+    const prepareUpload = async() => {
         console.log(`handleUpload: frames ${frames.length}, audioChunks ${audioChunks.length}`);
         if (frames.length === 0 || audioChunks.length == 0) return;
         
@@ -182,11 +263,18 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
         console.log("Audio chunk:", audioChunk);
         const base64Audio = await convertBlobToBase64(audioChunk);
 
-        const audioResult = await speechToText.mutateAsync(base64Audio);
-        const motionResult = await uploadImprov.mutateAsync({frames, audioResult}); //ADD audioResult to the motionResult??
-        
-        console.log("Motion result: ", motionResult);
-        console.log("Audio result: ", audioResult);
+        // const audioResult = await speechToText.mutateAsync(base64Audio);
+        // const motionResult = await uploadMotion.mutateAsync({frames, audioResult}); //ADD audioResult to the motionResult??
+        // console.log("Motion result: ", motionResult);
+        // console.log("Audio result: ", audioResult);
+        console.log("EndStory: ", endStory);
+        if (endStory) {
+            console.log("Ending story...");
+            handleEndAll.mutateAsync({audio: base64Audio, frames});
+        }
+        else {
+            handleUploadAll.mutateAsync({audio: base64Audio, frames});
+        }
     }
 
     const convertBlobToBase64 = (blob: Blob): Promise<string> => {
@@ -248,8 +336,8 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
                         left: 0,
                         zIndex: 10,
                       }}
-                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleResult.isPending}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob || handleResult.isPending) && (
+                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleUploadAll.isPending}>
+                      {(frames.length != 0 && !isCapturing && mediaBlob || handleUploadAll.isPending) && (
                           <Box>
                               <video controls width="100%" style={{ zIndex: 20 }}>
                               {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
@@ -284,26 +372,26 @@ const ImprovPartUploadModal = ({ display, setGenerated, finalAction }: Props) =>
                           {!isCapturing &&
                             <Button onClick={handleStartRecording} fullWidth
                                 color={
-                                    (frames.length > 0 || handleResult.isPending) ? 'orange' : 'violet'
+                                    (frames.length > 0 || handleUploadAll.isPending) ? 'orange' : 'violet'
                                 }
-                                disabled={isCapturing || uploadImprov.isPending || handleResult.isPending}>
+                                disabled={isCapturing || handleUploadAll.isPending || handleEndAll.isPending}>
                                 {
-                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleResult.isPending) ? 'Retake' : 'Start Recording'
+                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Retake' : 'Start Recording'
                                 }
                             </Button>
                           }
                       </Grid.Col>
                       <Grid.Col span={6}>
-                          <Button onClick={handleUpload} fullWidth
+                          <Button onClick={prepareUpload} fullWidth
                               disabled={frames.length === 0 || isCapturing}
-                              loading={uploadImprov.isPending || handleResult.isPending}
+                              loading={handleUploadAll.isPending || handleEndAll.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
                                   Send
                           </Button>
                       </Grid.Col>
                   </Grid>
-                  {uploadImprov.isError && (
-                      <Text c="red">{uploadImprov.error.message}</Text>
+                  {handleUploadAll.isError && (
+                      <Text c="red">{handleUploadAll.error.message}</Text>
                   )}
                 </Stack>
               </Container>

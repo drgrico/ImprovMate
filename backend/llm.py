@@ -720,6 +720,74 @@ Here is an example JSON object:
         data = self.send_gpt4_request(messages)
         return self.__get_json_data(data)
 
+
+    def generate_premise_improv(self, transcript, motion, character): #TODO: improve prompt - specify where and who
+        # Generate a story part based on the imrprov result  
+        improv = {"dialogue": transcript, "motion": motion}
+        if logger:
+            logger.debug(f"Improv in generate_premise_improv(): {improv}")
+        
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """
+You a great storyteller.
+1. Understand the input object, which includes: 
+    {
+        "dialogue": The transcription of the audio in the improv performance,
+        "motion": {
+                "description": The description of the motion and audio in the improv performance,
+                "emotion": The emotional state associated with the action,
+                "keywords": 3 keywords describing the performance,
+            }
+    }
+Example:
+    {
+        "dialogue": "Help me, please",
+        "motion": {
+                "description": "The individual is sitting still with an intense gaze. As they speak the words 'Help me, please,' their mouth forms the words with a slight change in facial expression, enhancing the emotion conveyed by their voice.",
+                "emotion": "Vulnerable",
+                "keywords": ["vulnerable", "intense", "help"],
+            }
+    }
+2. The input object describes the motion and audio in a short improv performance that is to be used as a beginning for the narrative of the improvisation story.
+3. Generate the story premise based on the description and emotion of the improv performance.
+4. Analize the input object, if it is not specified who, where or what happens, randomly generate the missing parts.
+5. Use the information about the character.
+6. Be faithful to the input object.
+7. Include the following:
+    - title, a short title for the premise.
+    - desc, a short description of the premise.
+8. Return as a JSON object.
+    - No styling and all in ascii characters.
+    - Use double quotes for keys and values.
+    
+Example JSON object:
+{
+    "title": "Rescue Mission",
+    "desc": "An old man in distress calls out for help, setting the stage for a rescue mission to save them from danger."
+}
+"""
+                        % (),
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"{improv}. Character: {character}",
+                    },
+                ],
+            },
+        ]
+        data = self.send_gpt4_request(messages)
+        return self.__get_json_data(data) 
+    
     
     def generate_character_image_improv(self, character):
         
@@ -737,6 +805,443 @@ Use a realistic style.
 
         result = self.send_image_request(prompt)
         return {"prompt": prompt, "image_url": result}
+
+
+    def generate_character_premise_improv(self, transcript, frames, hints=[], language="en", end=False):
+        improv = {"dialogue": transcript, "motion": frames}
+        ctx = {"hints": hints, "end": end}
+        if logger:
+            logger.debug(f"Improv in generate_character_premise_improv(): {improv}, {ctx}")
+        
+        sys_msg = """
+You are a helpful assistant storyteller. Help me generate the character and the premise of the story starting from the dialogue and motion performed by the actor.
+1. The input object is a short improv performance that is to be used as a beginning for the narrative of the improvisation story.
+2. Analyze the key movements in the video, focusing on how the performer's movements interact with their spoken words or sounds in the audio. 
+3. Consider how these movements connect with the improvisational flow and transform or enhance the narrative in real-time.
+4. Name the main character in the story.
+5. Write a short backstory about the character in the story.
+6. Generate the story premise based on the description and emotion of the improv performance.
+7. Analize the input object, if it is not specified who, where or what happens, randomly generate the missing parts.
+"""
+        if len(hints) > 0:
+            if end:
+                type_of_end = str(hints).split(':')[0].strip().replace("{", "")
+                hint = str(hints).split(':')[1].strip().replace("}", "")
+                sys_msg += f"8 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+            else: 
+                sys_msg += f"8 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+                if language == "it":
+                    if hints.get("chi"):
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("dove"):
+                        sys_msg += "- 'dove': Location where the story takes place.\n"
+                    if hints.get("cosa"):
+                        sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
+                else: 
+                    if hints.get("who"):
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("where"):
+                        sys_msg += "- 'where': Location where the story takes place.\n"
+                    if hints.get("what"):
+                        sys_msg += "- 'what': Event used as the starting point of the story.\n"
+
+        sys_msg += """
+9. Return as a JSON object. 
+    - No styling and all in ascii characters.
+    - Use double quotes for keys and values.
+
+Explanation of the output format:
+{
+    'character': {
+        'fullname': fullname of the character,
+        'shortname': shortname of the character,
+        'likes': what they like,
+        'dislikes': what they dislike,
+        'fears': what they fear,
+        'personality': 3 main traits of his personality,
+        'backstory': a short backstory about the character using 200 characters,
+    }
+    'premise': {
+        'title': a short title for the premise,
+        'desc': a short description of the premise,
+    }
+}
+
+Here is an example JSON object:
+{
+    'character': {
+        'fullname': 'Johnny the cat',
+        'shortname': 'Johnny',
+        'likes': ['tuna', 'playing'],
+        'dislikes': ['dogs', 'water'],
+        'fears': ['being hungry', 'being alone'],
+        'personality': ['friendly', 'gluttonous', 'playful'],
+        'backstory': 'Johnny the cat loves tuna. He is always hungry and looking for food. He is a very friendly cat and loves to play with his toys.',
+    }
+    'premise': {
+        'title': 'Rescue Mission',
+        'desc': 'Jonnhy the cat is in distress and calls out for help, setting the stage for a rescue mission to save him from danger.'
+    }
+}
+"""
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": sys_msg,
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """
+Analyze the following improvisational performance with reference to the audio transcription: '%s'.
+"""                     % transcript, #TODO: try different examples
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    "These are video frames in order.",
+                    *map(lambda frame: {"type": "image_url", "image_url": {
+                    "url": f'{frame}', "detail": "low"}},
+                    frames)  
+                ],
+            }
+        ]
+        data = self.send_gpt4_request(messages)
+        return self.__get_json_data(data)
+        
+
+    def generate_story_improv(self, transcript, frames, story, premise, keypoint, hints=[], language="en", end=False):
+        improv = {"dialogue": transcript, "motion": frames}
+        ctx = {"story": story, "hints": hints, "end": end}
+        if logger:
+            logger.debug(f"Improv in generate_character_premise_improv(): {improv}, {ctx}")
+
+        length = random.choice([1, 1, 1, 2, 2, 3, 4])
+        
+        sys_msg = f"""
+You are a helpful assistant storyteller. Help me generate the next part of the story starting from the dialogue and motion performed by the actor.
+1. The input object is a short improv performance that is to be used as a continuation for the narrative of the improvisation story.
+2. Analyze the key movements in the video, focusing on how the performer's movements interact with their spoken words or sounds in the audio. 
+3. Consider how these movements connect with the improvisational flow and transform or enhance the narrative in real-time.
+"""
+        if len(hints) > 0:
+            if end:
+                type_of_end = str(hints).split(':')[0].strip().replace("{", "")
+                hint = str(hints).split(':')[1].strip().replace("}", "")
+                sys_msg += f"4 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+            else: 
+                sys_msg += f"4 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+                if language == "it":
+                    if hints.get("chi"):
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("dove"):
+                        sys_msg += "- 'dove': Location where the story takes place.\n"
+                    if hints.get("cosa"):
+                        sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
+                else: 
+                    if hints.get("who"):
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("where"):
+                        sys_msg += "- 'where': Location where the story takes place.\n"
+                    if hints.get("what"):
+                        sys_msg += "- 'what': Event used as the starting point of the story.\n"
+
+        sys_msg += f"""
+5. Consider the premise of the story, it consist main scenario or conflict of the story: {premise}.
+6. Consider the narrative context that has been established so far: {story}.
+7. Consider the key points that have been identified in the story: 
+    - "who": The characters present in the story told so far.
+    - "where": The location where the story takes place.
+    - "objects": The objects present in the story told so far.
+    - {keypoint}.
+8. Generate the next story part based on the context of the story, considering description and emotion of the improv performance. The next story part should be: 
+    - Not more than {length} sentences.
+    - Take into account the "who", "where" and "objects" present in the story so far. Omit them only if they are not relevant to the new part.
+    - Reflect any hints, decisions, or actions from the improv as part of the next story step.
+    - Be true to the user's intentions.
+9. Categorize the sentiment of this part using one of the following: 'happy', 'sad', 'neutral', or 'shocking'.
+"""
+        sys_msg += """
+10. Return as a JSON object. 
+    - No styling and all in ascii characters.
+    - Use double quotes for keys and values.
+
+Explanation of the output format:
+{
+    "text": Narration of the new story part,
+    "keymoment": Key moment in the story part,
+    "sentiment": Sentiment of the story part,
+    "who": Characters (one or more) present in the story part,
+    "where": Location where the story takes place,
+    "objects": Objects (one or more) present in the story part,
+}
+
+Here is an example JSON object:
+{
+    "text": "He looked around to investigate as if searching for something and found that someone had stolen his tuna!",
+    "keymoment": "A can of tune filled with tuna that is overflowing to the floor in a kitchen."
+    "sentiment": "sad",
+    "who": ["Johnny"],
+    "where": "kitchen",
+    "objects": ["tuna"],
+}
+"""
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": sys_msg,
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """
+Analyze the following improvisational performance with reference to the audio transcription: '%s'.
+"""                     % transcript, #TODO: try different examples
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    "These are video frames in order.",
+                    *map(lambda frame: {"type": "image_url", "image_url": {
+                    "url": f'{frame}', "detail": "low"}},
+                    frames)  
+                ],
+            }
+        ]
+        data = self.send_gpt4_request(messages)
+        return self.__get_json_data(data)
+    
+
+    def generate_ending_improv(self, transcript, frames, story, premise, keypoint, hints=[], language="en", end=True):
+        improv = {"dialogue": transcript, "motion": frames}
+        ctx = {"story": story, "hints": hints, "end": end}
+        if logger:
+            logger.debug(f"Improv in generate_character_premise_improv(): {improv}, {ctx}")
+        
+        sys_msg = f"""
+You are a helpful assistant storyteller. Help me generate the ending of the story starting from the dialogue and motion performed by the actor.
+1. The input object is a short improv performance that is to be used as an ending for the narrative of the improvisation story.
+2. Analyze and the key movements in the video, focusing on how the performer's movements interact with their spoken words or sounds in the audio. 
+3. Consider how these movements connect with the improvisational flow and transform or enhance the narrative in real-time.
+"""
+        if len(hints) > 0:
+            if end:
+                type_of_end = str(hints).split(':')[0].strip().replace("{", "")
+                hint = str(hints).split(':')[1].strip().replace("}", "")
+                sys_msg += f"4 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+            else: 
+                sys_msg += f"4 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+                if language == "it":
+                    if hints.get("chi"):
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("dove"):
+                        sys_msg += "- 'dove': Location where the story takes place.\n"
+                    if hints.get("cosa"):
+                        sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
+                else: 
+                    if hints.get("who"):
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("where"):
+                        sys_msg += "- 'where': Location where the story takes place.\n"
+                    if hints.get("what"):
+                        sys_msg += "- 'what': Event used as the starting point of the story.\n"
+
+        sys_msg += f"""
+5. Consider the premise of the story, it consist main scenario or conflict of the story: {premise}.
+6. Consider the narrative context that has been established so far: {story}.
+7. Consider the key points that have been identified in the story: 
+    - "who": The characters present in the story told so far.
+    - "where": The location where the story takes place.
+    - "objects": The objects present in the story told so far.
+    - {keypoint}.
+8. Generate the final story part based on the context of the story, considering description and emotion of the improv performance. 
+The ending should be: 
+    - Take into account the "who", "where" and "objects" present in the story so far. Omit them only if they are not relevant to the ending.
+    - Reflect any hints, decisions, or actions from the improv as part of the ending.
+    - Be true to the user's intentions.
+    - Don't leave any narrative points hanging.
+9. Categorize the sentiment of this part using one of the following: 'happy', 'sad', 'neutral', or 'shocking'.
+"""
+        sys_msg += """
+10. Return as a JSON object. 
+    - No styling and all in ascii characters.
+    - Use double quotes for keys and values.
+
+Explanation of the output format:
+{
+    "text": Narration of the ending,
+    "keymoment": Key moment in the ending,
+    "sentiment": Sentiment of the ending,
+    "who": Characters (one or more) present in the ending,
+    "where": Location where the story takes place,
+    "objects": Objects (one or more) present in the ending,
+}
+
+Here is an example JSON object:
+{
+    "text": "Johnny found his tuna in the fridge, safe and sound, and decided to share it with his girlfriend Tina.",
+    "keymoment": "A can of tuna in the fridge, untouched and ready to be eaten.",
+    "sentiment": "happy",
+    "who": ["Johnny", "Tina"],
+    "where": "kitchen",
+    "objects": ["tuna", "fridge"],
+}
+"""
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": sys_msg,
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """
+Analyze the following improvisational performance with reference to the audio transcription: '%s'.
+"""                     % transcript, #TODO: try different examples
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    "These are video frames in order.",
+                    *map(lambda frame: {"type": "image_url", "image_url": {
+                    "url": f'{frame}', "detail": "low"}},
+                    frames)  
+                ],
+            }
+        ]
+        data = self.send_gpt4_request(messages)
+        return self.__get_json_data(data)
+
+
+    def generate_ending_exercise_improv(self, transcript, frames, story, hints=[], language="en", end=True):
+        improv = {"dialogue": transcript, "motion": frames}
+        ctx = {"hints": hints, "end": end}
+        if logger:
+            logger.debug(f"Improv in generate_character_premise_improv(): {improv}, {ctx}")
+        
+        sys_msg = f"""
+You are a helpful assistant storyteller. Help me generate the ending of the story starting from the dialogue and motion performed by the actor.
+1. The input object is a short improv performance that is to be used as an ending for the narrative of the improvisation story.
+2. Analyze and the key movements in the video, focusing on how the performer's movements interact with their spoken words or sounds in the audio. 
+3. Consider how these movements connect with the improvisational flow and transform or enhance the narrative in real-time.
+"""
+        if len(hints) > 0:
+            if end:
+                type_of_end = str(hints).split(':')[0].strip().replace("{", "")
+                hint = str(hints).split(':')[1].strip().replace("}", "")
+                sys_msg += f"4 - As context for the improv performance, the scenario can be described as {type_of_end} and this is the scenario staged by the performer: {hint}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+            else: 
+                sys_msg += f"4 - As context for the improv performance, use the following hints to guide your analysis: {hints}. Be faithful to the context and use the characters, places or actions mentioned.\n"
+                if language == "it":
+                    if hints.get("chi"):
+                        sys_msg += "- 'chi': The character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("dove"):
+                        sys_msg += "- 'dove': Location where the story takes place.\n"
+                    if hints.get("cosa"):
+                        sys_msg += "- 'cosa': Event used as the starting point of the story.\n"
+                else: 
+                    if hints.get("who"):
+                        sys_msg += "- 'who': he character that the performer is impersonating, and will be the protagonist of the story.\n"
+                    if hints.get("where"):
+                        sys_msg += "- 'where': Location where the story takes place.\n"
+                    if hints.get("what"):
+                        sys_msg += "- 'what': Event used as the starting point of the story.\n"
+
+        sys_msg += f"""
+5. Consider the narrative context that has been established so far: {story}.
+6. Generate the final story part based on the context of the story, considering description and emotion of the improv performance. 
+The ending should be: 
+    - Take into account the "who", "where" and "objects" present in the story so far. Omit them only if they are not relevant to the ending.
+    - Reflect any hints, decisions, or actions from the improv as part of the ending.
+    - Be true to the user's intentions.
+    - Don't leave any narrative points hanging.
+9. Categorize the sentiment of this part using one of the following: 'happy', 'sad', 'neutral', or 'shocking'.
+"""
+        sys_msg += """
+10. Return as a JSON object. 
+    - No styling and all in ascii characters.
+    - Use double quotes for keys and values.
+
+Explanation of the output format:
+{
+    "text": Narration of the ending,
+    "keymoment": Key moment in the ending,
+    "sentiment": Sentiment of the ending,
+    "who": Characters (one or more) present in the ending,
+    "where": Location where the story takes place,
+    "objects": Objects (one or more) present in the ending,
+}
+
+Here is an example JSON object:
+{
+    "text": "Johnny found his tuna in the fridge, safe and sound, and decided to share it with his girlfriend Tina.",
+    "keymoment": "A can of tuna in the fridge, untouched and ready to be eaten.",
+    "sentiment": "happy",
+    "who": ["Johnny", "Tina"],
+    "where": "kitchen",
+    "objects": ["tuna", "fridge"],
+}
+"""
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": sys_msg,
+                    }
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """
+Analyze the following improvisational performance with reference to the audio transcription: '%s'.
+"""                     % transcript, #TODO: try different examples
+                    },
+                ],
+            },
+            {
+                "role": "user",
+                "content": [
+                    "These are video frames in order.",
+                    *map(lambda frame: {"type": "image_url", "image_url": {
+                    "url": f'{frame}', "detail": "low"}},
+                    frames)  
+                ],
+            }
+        ]
+        data = self.send_gpt4_request(messages)
+        return self.__get_json_data(data)
 
 
     def translate_text(self, text, source_language="en", target_language="en"):
@@ -879,111 +1384,7 @@ Example:
         
         data = self.send_gpt4_request(messages)
         return self.__get_json_data(data)
-
-
-#     def generate_motion_part(self, context, complexity):
-#         # Generate a story part based on the motion labeling result
-#         premise = context.get("premise")
-#         story = context.get("story")
-#         motion = context.get("motion").get("data")
-#         action = motion.get("action")
-#         desc = motion.get("desc")
-#         emotion = motion.get("emotion") # TODO: should we use it?
-        
-#         ctx = {"premise": premise, "story": story, "action": action, "desc": desc, "emotion": emotion}
-        
-#         length = random.choice([1, 1, 1, 2, 2, 3, 4])
-#         settings = [
-#             "Something absurdly good happens to the main character.",
-#             "Something absurdly bad happens to the main character.",
-#             "Introduce a new friendly character.",
-#             "Introduce a new relevant item.",
-#             "Advance the story in time (time skip).",
-#             "Move the story to a new location.",
-#             "Twist something already known.",
-#             "End with a cliffhanger.",
-#         ]
-        
-#         # Randomly select a setting from the list
-#         setting = random.choice(settings)
-#         convergence = random.choice([setting, "Direct the story towards the premise."])
-#         messages = [
-#             {
-#                 "role": "system",
-#                 "content": [
-#                     {
-#                         "type": "text",
-#                         "text": """
-# You a great storyteller.
-# 1. Understand the input object, which includes: 
-#     {
-#         "premise": The main scenario or conflict of the story,
-#         "story": The narrative context that has been estabilished so far,
-#         "action": The primary action to be performed by the main character,
-#         "desc": A detailed description of a person's action which may involve gestures related to tools or objects,
-#         "emotion": The emotional state associated with the action,
-#     }
-# Example:
-#     {
-#         "premise": "Johnny needs to find out who stole his tuna.",
-#         "story": "Once upon a time there was a cat named Johnny who loved to eat tuna. One day when Johnny was playing with his toys, he heard a noise coming from the kitchen.",
-#         "action": "Investigate",
-#         "desc": "A person looking around as if searching for something."
-#         "emotion": "Confused",
-#     }
-# 2. Understand the story so far.
-# 3. Continue the story by ensuring that the main character directly performs the action described in "desc" with a strong influence from the "emotion". 
-# The same action should have varied narrative outcomes based on the emotion, e.g.:
-#     - If the "emotion" is "Friendly", a fist thrown could be a fist bump.
-#     - If the "emotion" is "Hostile", the same fist might be a punch.
-# Use any tools or objects implied by the gesture in "desc", integrating them into the narrative. 
-# Do not describe the character mimicking an action (e.g. "raising his hand to mimic drinking from a cup"). The character must perform the real action (e.g. "He picked up the cup and drank").
-# For example:
-#     - If "desc" mentions a person mimicking the action of swinging a hammer, the character should actually use a hammer in the story. 
-# 4. The next story part should be:
-#     - %s
-#     - %s
-#     - Not more than %d sentences.
-# 5. Generate a short visual description of a key moment in the new part:
-#     - Describe the environment.
-#     - Do not name the main character.
-# 6. Categorize the sentiment of the new part. Choose from: 'happy', 'sad', 'neutral', 'shocking'.
-# 7. Return as a JSON object.
-#     - No styling and all in ascii characters.
-#     - Use double quotes for keys and values.
-    
-# Example JSON object:
-# {
-#     "part": {
-#         "text": "He looked around to investigate as if searching for something and found that someone had stolen his tuna!",
-#         "keymoment": "A can of tune filled with tuna that is overflowing to the floor in a kitchen."
-#         "sentiment": "sad",
-#         "who": ["Johnny"],
-#         "where": "kitchen",
-#         "objects": ["tuna"],
-#     }
-# }
-# """
-#                         % (convergence, setting, length),
-#                     }
-#                 ],
-#             },
-#             {
-#                 "role": "user",
-#                 "content": [
-#                     {
-#                         "type": "text",
-#                         "text": str(ctx),
-#                     },
-#                 ],
-#             },
-#         ]
-
-#         if logger:
-#             logger.debug(f"Chosen setting: {setting}")
-#         data = self.send_gpt4_request(messages)
-#         return self.__get_json_data(data) 
-       
+  
         
     def speech_to_text(self, audio_file, language="en"): #TODO: change prompt?
         if logger:
@@ -1172,74 +1573,6 @@ Example:
         data = self.send_gpt4_request(messages)
         return self.__get_json_data(data)    
         
-        
-    def generate_premise_improv(self, transcript, motion, character): #TODO: improve prompt - specify where and who
-        # Generate a story part based on the imrprov result  
-        improv = {"dialogue": transcript, "motion": motion}
-        if logger:
-            logger.debug(f"Improv in generate_premise_improv(): {improv}")
-        
-        messages = [
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": """
-You a great storyteller.
-1. Understand the input object, which includes: 
-    {
-        "dialogue": The transcription of the audio in the improv performance,
-        "motion": {
-                "description": The description of the motion and audio in the improv performance,
-                "emotion": The emotional state associated with the action,
-                "keywords": 3 keywords describing the performance,
-            }
-    }
-Example:
-    {
-        "dialogue": "Help me, please",
-        "motion": {
-                "description": "The individual is sitting still with an intense gaze. As they speak the words 'Help me, please,' their mouth forms the words with a slight change in facial expression, enhancing the emotion conveyed by their voice.",
-                "emotion": "Vulnerable",
-                "keywords": ["vulnerable", "intense", "help"],
-            }
-    }
-2. The input object describes the motion and audio in a short improv performance that is to be used as a beginning for the narrative of the improvisation story.
-3. Generate the story premise based on the description and emotion of the improv performance.
-4. Analize the input object, if it is not specified who, where or what happens, randomly generate the missing parts.
-5. Use the information about the character.
-6. Be faithful to the input object.
-7. Include the following:
-    - title, a short title for the premise.
-    - desc, a short description of the premise.
-8. Return as a JSON object.
-    - No styling and all in ascii characters.
-    - Use double quotes for keys and values.
-    
-Example JSON object:
-{
-    "title": "Rescue Mission",
-    "desc": "An old man in distress calls out for help, setting the stage for a rescue mission to save them from danger."
-}
-"""
-                        % (),
-                    }
-                ],
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"{improv}. Character: {character}",
-                    },
-                ],
-            },
-        ]
-        data = self.send_gpt4_request(messages)
-        return self.__get_json_data(data) 
-    
     
     def generate_part_improv(self, context, complexity): #TODO: change randomizer, complexity?
          # Generate a story part based on the motion labeling result
@@ -1483,7 +1816,7 @@ Example JSON object:
     "part": {
         "text": "The character finally reached the town, carrying the weight of their journey, ready to start anew.",
         "keymoment": "The sun rises over the quiet town, casting a hopeful light on the character's face as they arrive.",
-        "sentiment": "hopeful",
+        "sentiment": "happy",
         "who": ["character"],
         "where": "town",
         "objects": ["satchel", "map"]

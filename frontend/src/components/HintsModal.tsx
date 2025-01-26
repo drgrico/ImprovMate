@@ -125,8 +125,11 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
 
   const toggleMode = () => {
     console.log("Changing mode...", selectedHints);
-    setEnding(true);
-    setEndStory(ending);
+    console.log("Ending: ", ending);
+    const newEnding = !ending;
+    setEnding(newEnding);
+    setEndStory(newEnding);
+    console.log("Toggled ending: ", newEnding);
     setSelectedHints({});
     setHintList([]);
     refetch();
