@@ -1,4 +1,4 @@
-import { Box, Button, Container, Grid, Modal, Select, Stack, Text } from '@mantine/core'
+import { Box, Button, Container, Dialog, Grid, Modal, Select, Stack, Text } from '@mantine/core'
 import { useRef, useState } from 'react'
 import useWebcam from '../hooks/useWebcam';
 import getAxiosInstance from '../utils/axiosInstance';
@@ -236,120 +236,188 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
 
     return (
         <>
-        <Box className="motion-upload__wrapper">
-          <Box className="motion-upload__content">
-            <Modal opened={display} onClose={handleClose}
-              size="lg" title="Capture Motion"
-              centered>
-              <Container>
-                <Stack>
-                  <Grid>
-                    <Grid.Col span={6}>
-                      <Box className='motion-upload__devices'>
-                          <Select data={
-                              userDevices.map((device) => ({
+          <Box className="motion-upload__wrapper">
+            <Box className="motion-upload__content">
+              <Modal
+                opened={display}
+                onClose={handleClose}
+                size="lg"
+                title="Capture Motion"
+                centered
+              >
+                <Container>
+                      <Stack>
+                        <Grid>
+                          <Grid.Col span={6}>
+                            <Box className='motion-upload__devices'>
+                              <Select
+                                data={userDevices.map((device) => ({
                                   value: device.deviceId,
                                   label: device.label,
-                              }))
-                          } value={activeDevice}
-                              onChange={(value) => setActiveDevice(value)}
-                              placeholder="Select device" />
-                      </Box>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Box>
-                        <Button fullWidth onClick={openHints}>
-                          {language === "it" ? "Suggerimenti" : "Hints"}
-                        </Button>
-                      </Box>
-                    </Grid.Col>
-                  </Grid>
-                  <Box className="motion-upload__webcam"
-                    style={{
-                      position: 'relative',
-                    }}>
-                    <Box className="motion-upload__overview"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 10,
-                      }}
-                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleUploadAll.isPending}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob || handleUploadAll.isPending) && (
-                          <Box>
-                              <video controls width="100%" style={{ zIndex: 20 }}>
-                              {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
-                              </video>
-                          </Box>
-                      )}
-                    </Box>
-                    {(<Webcam ref={webcamRef} width="100%" videoConstraints={{
-                      deviceId: activeDevice ?? undefined,
-                    }} 
-                      onUserMedia={
-                          () => {
-                              if (userDevices.length === 0)
-                                  navigator.mediaDevices.enumerateDevices()
-                                      .then((devices) => {
-                                          const videoDevices = devices.filter(
-                                              (device) => device.kind === 'videoinput'
-                                          );
-                                          setUserDevices(videoDevices);
-                                          setActiveDevice(videoDevices[0].deviceId);
-                                      });
-                          }
-                      } />)}
-                  </Box>
-                  <Grid>
-                      <Grid.Col span={6}>
-                          {isCapturing && (
-                              <Button onClick={handleStopRecording} fullWidth
-                                  color='red'
-                                  disabled={!isCapturing}>{language === "it" ? "Ferma Registrazione" : "Stop Recording"}</Button>
-                          )}
-                          {!isCapturing &&
-                              <Button onClick={handleStartRecording} fullWidth
-                                  color={
-                                    (frames.length > 0 || handleUploadAll.isPending) ? 'orange' : 'violet'
-                                  }
-                                  disabled={isCapturing || handleUploadAll.isPending}>
-                                  {language === "it" ? (
-                                    isCapturing ? 'Registrazione in corso...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Ricomincia' : 'Inizia Registrazione'
-                                    ) : (
-                                        isCapturing ? 'Recording...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Retake' : 'Start Recording'
-                                    )}
+                                }))}
+                                value={activeDevice}
+                                onChange={(value) => setActiveDevice(value)}
+                                placeholder="Select device"
+                              />
+                            </Box>
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <Box>
+                              <Button fullWidth onClick={openHints}>
+                                {language === "it" ? "Suggerimenti" : "Hints"}
                               </Button>
-                          }
-                      </Grid.Col>
-                      <Grid.Col span={6}>
-                          {/* <Button onClick={handleUpload} fullWidth */}
-                          <Button onClick={prepareUpload} fullWidth
+                            </Box>
+                          </Grid.Col>
+                        </Grid>
+                        <Box
+                          className="motion-upload__webcam"
+                          style={{ position: 'relative' }}
+                        >
+                          <Box
+                            className="motion-upload__overview"
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              zIndex: 10,
+                            }}
+                            hidden={
+                              (frames.length === 0 || isCapturing || !mediaBlob) &&
+                              !handleUploadAll.isPending
+                            }
+                          >
+                            {(frames.length !== 0 && !isCapturing && mediaBlob) ||
+                            handleUploadAll.isPending ? (
+                              <Box>
+                                <video controls width="100%" style={{ zIndex: 20 }}>
+                                  {mediaBlob && (
+                                    <source
+                                      src={URL.createObjectURL(mediaBlob)}
+                                      type="video/mp4"
+                                    />
+                                  )}
+                                </video>
+                              </Box>
+                            ) : null}
+                          </Box>
+                          <Webcam
+                            ref={webcamRef}
+                            width="100%"
+                            videoConstraints={{
+                              deviceId: activeDevice ?? undefined,
+                            }}
+                            onUserMedia={() => {
+                              if (userDevices.length === 0)
+                                navigator.mediaDevices
+                                  .enumerateDevices()
+                                  .then((devices) => {
+                                    const videoDevices = devices.filter(
+                                      (device) => device.kind === 'videoinput'
+                                    );
+                                    setUserDevices(videoDevices);
+                                    setActiveDevice(videoDevices[0].deviceId);
+                                  });
+                            }}
+                          />
+                        </Box>
+                        <Grid>
+                          <Grid.Col span={6}>
+                            {isCapturing ? (
+                              <Button
+                                onClick={handleStopRecording}
+                                fullWidth
+                                color="red"
+                                disabled={!isCapturing}
+                              >
+                                {language === "it" ? "Ferma Registrazione" : "Stop Recording"}
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={handleStartRecording}
+                                fullWidth
+                                color={(frames.length > 0 || handleUploadAll.isPending) ? 'orange' : 'violet'}
+                                disabled={isCapturing || handleUploadAll.isPending}
+                              >
+                                {language === "it"
+                                  ? isCapturing
+                                    ? 'Registrazione in corso...'
+                                    : (frames.length > 0 || handleUploadAll.isPending)
+                                    ? 'Ricomincia'
+                                    : 'Inizia Registrazione'
+                                  : isCapturing
+                                  ? 'Recording...'
+                                  : (frames.length > 0 || handleUploadAll.isPending)
+                                  ? 'Retake'
+                                  : 'Start Recording'}
+                              </Button>
+                            )}
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <Button
+                              onClick={prepareUpload}
+                              fullWidth
                               disabled={frames.length === 0 || isCapturing}
-                              loading={handleUploadAll.isPending || handleUploadAll.isPending}
-                              loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
-                                  {language === "it" ? "Continua" : "Send"}
-                          </Button>
-                      </Grid.Col>
-                  </Grid>
-                  {handleUploadAll.isError && (
-                      <Text c="red">{handleUploadAll.error.message}</Text>
-                  )}
-                </Stack>
-              </Container>
-            </Modal>
+                              loading={handleUploadAll.isPending}
+                              loaderProps={{ color: 'white', size: 'md', type: 'dots' }}
+                            >
+                              {language === "it" ? "Continua" : "Send"}
+                            </Button>
+                          </Grid.Col>
+                        </Grid>
+                        {handleUploadAll.isError && (
+                          <Text c="red">{handleUploadAll.error.message}</Text>
+                        )}
+                      </Stack>
+                    {Object.keys(selectedHints).length > 0 && (
+                        <Dialog opened={Object.keys(selectedHints).length > 0}>
+                        <Box
+                            style={{
+                            height: '100%',
+                            }}
+                        >
+                            {Object.entries(selectedHints).map(([category, hint]) => (
+                            <Box key={category} mb="xs">
+                                <Box
+                                    style={(theme) => ({
+                                        backgroundColor: theme.colors.violet[5],
+                                        padding: theme.spacing.xs,
+                                        borderRadius: theme.radius.sm,
+                                    })}
+                                    >
+                                    <Text color="white">
+                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </Text>
+                                </Box>
+                                <Box
+                                    style={(theme) => ({
+                                        padding: theme.spacing.xs,
+                                        borderRadius: theme.radius.sm,
+                                    })}
+                                    >
+                                <Text size="sm">{hint}</Text>
+                                </Box>
+                            </Box>
+                            ))}
+                        </Box>
+                        </Dialog>
+                    )}
+                </Container>
+              </Modal>
+            </Box>
           </Box>
-        </Box>
-        <HintsModal display={hintsModal}
-                    ending={false}
-                    storyImprov={false} 
-                    selectedHints={selectedHints}
-                    setSelectedHints={setSelectedHints}
-                    finalAction={closeHints} setEndStory={function (): void {
-                        throw new Error('Function not implemented.');
-                    }}/>
-      </>
-    )
-}
-
-export default StartImprovUploadModal
+          <HintsModal
+            display={hintsModal}
+            ending={false}
+            storyImprov={false}
+            selectedHints={selectedHints}
+            setSelectedHints={setSelectedHints}
+            finalAction={closeHints}
+            setEndStory={function (): void {
+              throw new Error('Function not implemented.');
+            }}
+          />
+        </>
+    );
+};
+    
+export default StartImprovUploadModal;

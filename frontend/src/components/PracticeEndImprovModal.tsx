@@ -1,4 +1,4 @@
-import { Box, Button, Container, Grid, Modal, Select, Stack, Text } from '@mantine/core'
+import { Box, Button, Container, Dialog, Grid, Modal, Select, Stack, Text } from '@mantine/core'
 import { useRef, useState } from 'react'
 import useWebcam from '../hooks/useWebcam';
 import getAxiosInstance from '../utils/axiosInstance';
@@ -315,6 +315,39 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                       <Text c="red">{handleEndAll.error.message}</Text>
                   )}
                 </Stack>
+                {Object.keys(selectedHints).length > 0 && (
+                        <Dialog opened={Object.keys(selectedHints).length > 0}>
+                        <Box
+                            style={{
+                            height: '100%',
+                            }}
+                        >
+                            {Object.entries(selectedHints).map(([category, hint]) => (
+                            <Box key={category} mb="xs">
+                                <Box
+                                    style={(theme) => ({
+                                        backgroundColor: theme.colors.violet[5],
+                                        padding: theme.spacing.xs,
+                                        borderRadius: theme.radius.sm,
+                                    })}
+                                    >
+                                    <Text color="white">
+                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </Text>
+                                </Box>
+                                <Box
+                                    style={(theme) => ({
+                                        padding: theme.spacing.xs,
+                                        borderRadius: theme.radius.sm,
+                                    })}
+                                    >
+                                <Text size="sm">{hint}</Text>
+                                </Box>
+                            </Box>
+                            ))}
+                        </Box>
+                        </Dialog>
+                    )}
               </Container>
             </Modal>
           </Box>
