@@ -1,9 +1,9 @@
-import { Box, Group, Stack, Grid, Center, Loader, Text } from "@mantine/core";
+import { Box, Group, Stack, Grid, Center, Loader, Text, RingProgress } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import getAxiosInstance from "../utils/axiosInstance";
 import { appendStory, startStory, usePractice3ThingsStore } from "../stores/practice3ThingsStore";
 import Practice3ThingsPart from "./Practice3ThingsPart";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type Props = {
     reset: () => void;
@@ -15,7 +15,11 @@ const Practice3ThingsView = ({reset}: Props) => {
   const [next, setNext] = useState<boolean>(false);
   const [questions, setQuestions] = useState<any[]>([]); //array of questions
   const [cntQ, setCntQ] = useState<number>(0);
-  let maxQ = 20;
+  const maxQ = 20;
+  const [timeLeft, setTimeLeft] = useState<number>(10);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // console.log("Practice3ThingsView - id:", id);
   console.log("Practice3ThingsView - story:", story);
@@ -50,19 +54,53 @@ const Practice3ThingsView = ({reset}: Props) => {
   });
 
   useEffect(() => {
+    if (!isLoading && story && story.parts.length > 0) {
+      // Resetta il countdown per la domanda corrente
+      setTimeLeft(10);
+      
+      // Timer che al termine dei 10 secondi passa alla domanda successiva
+      timerRef.current = setTimeout(() => {
+        setNext(true);
+      }, 10000);
+
+      // Intervallo che aggiorna lo stato del countdown ogni secondo
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
+    }
+  }, [story?.parts.length, isLoading]);
+
+  useEffect(() => {
     if (next) {
-      if (cntQ == maxQ) {
-        console.log("Refetching...");
-        refetch(); 
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
-      else {
-        appendStory(questions[cntQ])
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (cntQ === maxQ) {
+        console.log("Refetching...");
+        refetch();
+      } else {
+        appendStory(questions[cntQ]);
         setCntQ(cntQ + 1);
         console.log("CntQ:", cntQ);
       }
       setNext(false);
     }
-  }, [next, refetch]);
+  }, [next, refetch, cntQ, maxQ, questions]);
 
   // console.log("Practice3ThingsView - isLoading:", isLoading);
   // console.log("Practice3ThingsView - isError:", isError);
@@ -91,19 +129,50 @@ const Practice3ThingsView = ({reset}: Props) => {
   return (
     <Box component={Group} align="center" justify="center" pb="xl">
       <Grid w="100%">
-        <Grid.Col span={{ sm: 12, md: 8 }} offset={{ sm: 0, md: 2 }}>
+      <Grid.Col span={{ sm: 12, md: 8 }} offset={{ sm: 0, md: 2 }}>
           <Stack>
-            {story &&
-              story.parts.length > 0 &&
-              story.parts.map((part, i) => (
+          {story.parts.map((part, i) => (
+              <Box key={i} style={{ position: "relative", marginBottom: 8 }}>
                 <Practice3ThingsPart
-                  key={i}
-                  isNew={i === story.parts.length - 1} //disable textinput based on this?
+                  isNew={i === story.parts.length - 1}
                   part={part}
                   setNext={setNext}
                   reset={reset}
                 />
-              ))}
+                {i === story.parts.length - 1 && (
+                  <Box
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Box style={{ position: "relative"}}>
+                      <RingProgress
+                        roundCaps
+                        size={60}
+                        thickness={6}
+                        sections={[{ value: (timeLeft / 10) * 100, color: "violet" }]}
+                      />
+                      <Text
+                        size="xs"
+                        style={{
+                          textAlign: "center",
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {timeLeft}s
+                      </Text>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            ))}
           </Stack>
         </Grid.Col>
       </Grid>

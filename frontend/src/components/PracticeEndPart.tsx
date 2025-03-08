@@ -53,11 +53,11 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
 //   console.log("PracticeEndPart - text:", text);
 //   console.log("PracticeEndPart - textLoading:", textLoading);
 
-
   const autoReadStorySections = usePreferencesStore.use.autoReadStorySections();
 //   const includeStoryImages = usePreferencesStore.use.includeStoryImages();
 
   const finished = usePracticeEndingsStore.use.finished();
+  const language = usePreferencesStore.use.language();
 
   const outcome = useMutation({
     mutationKey: ["story-part"],
@@ -88,6 +88,7 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
   };
 
   const handleActionClick = (action: TAction) => {
+    console.log("Action clicked: ", action);
     if (!action.active) return;
     chooseAction(action);
     const story = getLastStoryText();
@@ -157,15 +158,15 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
             bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
             c={"white"}
           >
-            The story has ended
+            {language === "en" ? "The story has ended!" :  "La storia è finita!"}
           </Paper>
         )}
-        {part.actions &&
-          part.actions.map((action: TAction, i: number) => {
-            if (action.title.toLowerCase() === "motion capture") {
+        {part.actions?.map((action: TAction, i: number) => {
+            if (action.isImprov) {
               return  <ActionButton
               key={i}
               action={action}
+              isEnd={i === part.actions!.length - 1 && !action.isImprov}
               handleClick={() => handleMotionClick(action)}
             />
             }
@@ -173,6 +174,7 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
             return <ActionButton
               key={i}
               action={action}
+              isEnd={i === part.actions!.length - 1}
               handleClick={() => handleActionClick(action)}
             />
           }})}

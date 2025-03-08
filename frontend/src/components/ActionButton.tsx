@@ -6,10 +6,12 @@ import useTranslation from "../hooks/useTranslation";
 
 type Props = {
   action: TAction;
+  isEnd: boolean;
   handleClick: () => void;
 };
 
-const ActionButton = ({ action, handleClick }: Props) => {
+const ActionButton = ({ action, isEnd, handleClick }: Props) => {
+  // console.log("ActionButton - action:", action);
   const { data: shorttext, isLoading: shorttextLoading } = useTranslation(
     action.title
   );
@@ -24,8 +26,9 @@ const ActionButton = ({ action, handleClick }: Props) => {
         style={{
           borderTopRightRadius: 0,
           borderBottomRightRadius: 0,
+          cursor: !action.active ? "not-allowed" : "pointer",
         }}
-        color={!action.active ? (action.used ? "violet" : "gray") : "violet"}
+        color={!action.active ? (action.used ? (isEnd ? "orange" : "violet") : "gray") : (isEnd ? "orange" : "violet")}
         onClick={handleClick}
         disabled={!action.active && !action.used}
         tt="capitalize"
@@ -41,7 +44,7 @@ const ActionButton = ({ action, handleClick }: Props) => {
             size="sm"
             px="xs"
             color={
-              !action.active ? (action.used ? "violet" : "gray") : "violet"
+              !action.active ? (action.used ? (isEnd ? "orange" : "violet") : "gray") : (isEnd ? "orange" : "violet")
             }
             style={{
               borderTopLeftRadius: 0,

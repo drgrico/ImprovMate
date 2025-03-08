@@ -191,7 +191,7 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
                             size="xs"
                             onClick={() => handleSelectHint(category, hint[category])}
                             disabled={selectedHints[category] !== undefined && hint[category] !== undefined && selectedHints[category] === hint[category]}>
-                            Select
+                            {targetLanguage === "it" ? "Seleziona" : "Select"}
                           </Button>
                         </Grid.Col>
                       </Grid>
@@ -217,7 +217,7 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
                              size="xs"
                              onClick={() => handleSelectEndHint(category, hint[category])}
                              disabled={Object.values(selectedHints).includes(hint[category])}>
-                             Select
+                             {targetLanguage === "it" ? "Seleziona" : "Select"}
                            </Button>
                          </Grid.Col>
                        </Grid>
@@ -230,16 +230,14 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
         )}
         <Box style={{ display: "flex", justifyContent: "center" }} mt="md">
         <Button disabled={isLoading} onClick={finalAction} mr="md">
-          Done
+          {targetLanguage === "it" ? "Avanti" : "Done"}
         </Button>
         <Button disabled={isLoading} onClick={handleNewHints} mr="md">
-          New Hints
+          {targetLanguage === "it" ? "Altri Suggerimenti" : "New Hints"}
         </Button>
         {storyImprov && (
            <Button disabled={isLoading} onClick={toggleMode}>
-           {
-              ending ? "Continue Story" : "End Story"
-           }
+            {targetLanguage === "it" ? (ending ? "Continua Storia" : "Termina Storia") : (ending ? "Continue Story" : "End Story")}
          </Button>
         )}
         </Box>

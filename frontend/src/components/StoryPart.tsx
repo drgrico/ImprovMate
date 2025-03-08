@@ -35,13 +35,14 @@ import { useDisclosure } from "@mantine/hooks";
 import ImprovPartUploadModal from "./ImprovPartUpload";
 
 type Props = {
+  index: number;
   part: TStoryPart;
   isNew: boolean;
   storyImprovGenerated: boolean;
   setStoryImprovGenerated: (generated: boolean) => void;
 };
 
-const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated }: Props) => {
+const StoryPart = ({ index, part, isNew, storyImprovGenerated, setStoryImprovGenerated }: Props) => {
   const instance = getAxiosInstance();
   const { colorScheme } = useMantineColorScheme();
   const isSm = useMediaQuery("(max-width: 48em)");
@@ -57,6 +58,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
   const includeStoryImages = usePreferencesStore.use.includeStoryImages();
 
   const finished = useAdventureStore.use.finished();
+  const language = usePreferencesStore.use.language();
 
   const { isLoading: actionLoading } = useQuery({
     queryKey: ["actions", part.id],
@@ -93,7 +95,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
           { signal }
         )
         .then((res) => {
-          updateStoryImage(res.data.data.image_url);
+          updateStoryImage(index, res.data.data.image_url);
           return res.data.data;
         });
     },
@@ -130,6 +132,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
   });
 
   const handleActionClick = (action: TAction) => {
+    console.log("Action clicked: ", action);
     if (!action.active) return;
     chooseAction(action);
     const story = getStoryText()?.join(" ");
@@ -158,6 +161,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
 
   const handleMotionClick =  (action: TAction) => {
     if (!action.active) return;
+    // chooseAction(action);
     openCapture();
     printState();
   };
@@ -177,7 +181,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
           premise: useAdventureStore.getState().premise?.desc,
           story: story,
         });
-      }, 5000); // 10-second delay (to give time to generate previous image) TODO: decrease?
+      }, 1000); // 10-second delay (to give time to generate previous image) TODO: decrease?
     }
   }, [storyImprovGenerated]);
 
@@ -201,14 +205,17 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
       {((part.actions && part.actions.length > 0) || finished) && (
         <Flex direction={isSm ? "column" : "row"} gap="sm">
           <Group gap="sm" align="start" justify={"flex-start"}>
-            <Avatar
-              src={
-                part.sentiment
-                  ? `avatar/bot/bot${part.sentiment}.png`
-                  : "avatar/bot/botneutral.png"
-              }
-              radius="sm"
-            />
+            <Flex direction="column" gap="sm">
+              <Avatar
+                src={
+                  part.sentiment
+                    ? `avatar/bot/bot${part.sentiment}.png`
+                    : "avatar/bot/botneutral.png"
+                }
+                radius="sm"
+              />
+              {index == 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
+            </Flex>
           </Group>
           {includeStoryImages && (
             <Group gap="sm" align="start" justify="center">
@@ -302,15 +309,16 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
             bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
             c={"white"}
           >
-            The story has ended
+            {language === "en" ? "The story has ended!" :  "La storia è finita!"}
           </Paper>
         )}
         {part.actions &&
-          part.actions.map((action: TAction, i: number) => {
-            if (action.title.toLowerCase() === "motion capture") {
+          part.actions?.map((action: TAction, i: number) => {
+            if (action.isImprov) {
               return  <ActionButton
               key={i}
               action={action}
+              isEnd={i === part.actions!.length - 1}
               handleClick={() => handleMotionClick(action)}
             />
             }
@@ -318,6 +326,7 @@ const StoryPart = ({ part, isNew, storyImprovGenerated, setStoryImprovGenerated 
             return <ActionButton
               key={i}
               action={action}
+              isEnd={i === part.actions!.length - 1}
               handleClick={() => handleActionClick(action)}
             />
           }

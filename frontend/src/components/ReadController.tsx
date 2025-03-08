@@ -1,8 +1,8 @@
 import { useRef } from "react";
-import { Group, Button } from "@mantine/core";
+import { Group, Button, Tooltip } from "@mantine/core";
 import { useDisclosure, useOs } from "@mantine/hooks";
 import getAxiosInstance from "../utils/axiosInstance";
-import { FaPause, FaPlay } from "react-icons/fa";
+import { FaPause, FaHeadphones } from "react-icons/fa";
 import { FaRotateLeft } from "react-icons/fa6";
 
 type Props = {
@@ -40,26 +40,30 @@ const ReadController = ({ text, autoPlay }: Props) => {
   return (
     <Group justify="space-between" align="center">
       <Group gap="xs">
-        <Button
-          variant="filled"
-          size="xs"
-          radius="xl"
-          onClick={playing ? close : open}
-          color={"gray"}
-        >
-          {playing ? <FaPause /> : <FaPlay />}
-        </Button>
+        <Tooltip label={!playing ? "Lettura del testo" : "Ferma lettura"} position="left" withArrow>
+          <Button
+            variant="filled"
+            size="xs"
+            radius="xl"
+            onClick={playing ? close : open}
+            color={"gray"}
+          >
+            {playing ? <FaPause /> : <FaHeadphones />}
+          </Button>
+        </Tooltip>
 
-        <Button
-          variant="filled"
-          size="xs"
-          radius="xl"
-          color="gray"
-          disabled={!playing}
-          onClick={reset}
-        >
-          <FaRotateLeft />
-        </Button>
+        <Tooltip label="Ricomincia lettura" position="right" withArrow>
+          <Button
+            variant="filled"
+            size="xs"
+            radius="xl"
+            color="gray"
+            disabled={!playing}
+            onClick={reset}
+          >
+            <FaRotateLeft />
+          </Button>
+        </Tooltip>
       </Group>
       <audio
         ref={audioRef}

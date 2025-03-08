@@ -134,10 +134,11 @@ export const updateActions = (actions: TAction[]) => {
 
 export const chooseAction = (action: TAction | null) => {
   if (action === null) {
-    action = {id: "", title: "Motion Capture", desc: "", active: true, used: false};
+    action = {id: "", title: "Improvise", desc: "", active: true, used: true, isImprov: true};
     useAdventureStore.setState((state) => {
       if (!state.story) return state;
       const parts = state.story.parts;
+      console.log("parts in chooseAction: ", parts);
       parts[parts.length - 2].actions = parts[parts.length - 2].actions?.map(
         (a) => {
           a.active = false;
@@ -192,11 +193,11 @@ export const canChooseAction = () => {
     ].actions?.every((a) => !a.used);
 };
 
-export const updateStoryImage = (image_url: string) => {
+export const updateStoryImage = (index: number, image_url: string) => {
   useAdventureStore.setState((state) => {
     if (!state.story) return state;
     const parts = state.story.parts;
-    parts[parts.length - 1].image = image_url;
+    parts[index].image = image_url;
     return {
       story: {
         ...state.story,

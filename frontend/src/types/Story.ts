@@ -14,6 +14,7 @@ export type TAction = {
   desc: string;
   active: boolean;
   used: boolean;
+  isImprov: boolean;
 };
 
 export type TStoryImage = {

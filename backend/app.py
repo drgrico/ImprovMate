@@ -390,8 +390,8 @@ def actions_gen():
         actions = random.sample(actions, ACTION_GEN_COUNT)
         actions.append(
             {
-                "title": "Motion Capture",
-                "desc": "Use your body to progress the story!",
+                "title": "Improvise",
+                "desc": "Use your improvisation to progress the story!",
             }
         )
         actions.append(
@@ -400,7 +400,7 @@ def actions_gen():
                 "desc": "Bring the story to an end and see what happens!",
             }
         )
-        actions = [{"id": uuid.uuid4(), **a, "active": True} for a in actions]
+        actions = [{"id": uuid.uuid4(), **a, "active": True, "isImprov": a["title"] == "Improvise"} for a in actions]
         if logger:
             logger.debug(f"Story actions generated: {actions}")
         return jsonify(

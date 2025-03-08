@@ -107,7 +107,11 @@ const InstructionView = ({ setGameMode, setIsStartedEndings, setIsStarted3Things
                 <Select
                     m="xs"
                     placeholder="Game Mode"
-                    data={[
+                    data={language === "it" ? [
+                      { value: 'storia', label: 'Storia' },
+                      { value: 'pratica', label: 'Pratica' },
+                    ] : 
+                    [
                       { value: 'story', label: 'Story' },
                       { value: 'practice', label: 'Practice' },
                     ]}
@@ -120,7 +124,7 @@ const InstructionView = ({ setGameMode, setIsStartedEndings, setIsStarted3Things
             </Box>
           </Stack>
         </Paper>
-        {(selectedMode=="story") && (
+        {(selectedMode=="story" || selectedMode == "storia") && (
           <Grid>
             <Grid.Col span={6}>
               <Box opacity={session!=null ? 1 : 0.5}>
@@ -201,7 +205,7 @@ const InstructionView = ({ setGameMode, setIsStartedEndings, setIsStarted3Things
             </Grid.Col>
           </Grid>
         )}
-        {(selectedMode=="practice") && (
+        {(selectedMode=="practice" || selectedMode == "pratica") && (
           <Grid>
           <Grid.Col span={6}>
             <Box opacity={session!=null ? 1 : 0.5}>

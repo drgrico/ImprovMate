@@ -6,6 +6,7 @@ import useTranslation from "../hooks/useTranslation";
 import { setCharacterImage } from '../stores/adventureStore';
 import { useQuery } from "@tanstack/react-query";
 import getAxiosInstance from '../utils/axiosInstance';
+import { usePreferencesStore } from "../stores/preferencesStore";
 
 type Props = {
   image: TImage;
@@ -19,6 +20,7 @@ const CharacterCard = ({ image, character }: Props) => {
   const { data: backstory, isLoading: backstoryLoading } = useTranslation(
     character.backstory
   );
+  const language = usePreferencesStore.use.language();
 
   const instance = getAxiosInstance();
   const { isLoading: imageLoading } = useQuery({
@@ -58,7 +60,7 @@ const CharacterCard = ({ image, character }: Props) => {
         </Text>
       )}
       {backstory && (
-        <Spoiler maxHeight={100} showLabel="Show more" hideLabel="Hide">
+        <Spoiler maxHeight={100} showLabel={language === "it" ? "Mostra di più" : "Show more"} hideLabel={language === "it" ? "Nascondi" : "Hide"}>
           {backstory}
         </Spoiler>
       )}

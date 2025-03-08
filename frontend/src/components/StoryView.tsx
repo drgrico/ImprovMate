@@ -71,6 +71,7 @@ const StoryView = () => {
               story.parts.map((part, i) => (
                 <StoryPart
                   key={i}
+                  index={i}
                   isNew={i === story.parts.length - 1}
                   part={part}
                   storyImprovGenerated={storyImprovGenerated}

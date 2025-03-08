@@ -9,6 +9,7 @@ import { createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
 import { appendStory, getLastStoryText } from '../stores/practiceEndingsStore';
+import { usePreferencesStore } from '../stores/preferencesStore';
 
 type Props = {
     display: boolean;
@@ -35,6 +36,7 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
     const [hintsModal, { open: openHints, close: closeHints }] = useDisclosure();
     const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
     const instance = getAxiosInstance();
+    const language = usePreferencesStore.use.language();
 
     // const uploadMotion = useMutation({
     //     mutationKey: ['motion'],
@@ -237,7 +239,7 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                     <Grid.Col span={6}>
                       <Box>
                         <Button fullWidth onClick={openHints}>
-                          Hints
+                            {language === "it" ? "Suggerimenti" : "Hints"}
                         </Button>
                       </Box>
                     </Grid.Col>
@@ -284,7 +286,7 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                           {isCapturing && (
                               <Button onClick={handleStopRecording} fullWidth
                                   color='red'
-                                  disabled={!isCapturing}>Stop Recording</Button>
+                                  disabled={!isCapturing}>{language === "it" ? "Ferma Registrazione" : "Stop Recording"}</Button>
                           )}
                           {!isCapturing &&
                             <Button onClick={handleStartRecording} fullWidth
@@ -292,9 +294,11 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                                     (frames.length > 0 || handleEndAll.isPending) ? 'orange' : 'violet'
                                 }
                                 disabled={isCapturing || handleEndAll.isPending || handleEndAll.isPending}>
-                                {
+                                {language === "it" ? (
+                                    isCapturing ? 'Registrazione in corso...' : (frames.length > 0 || handleEndAll.isPending) ? 'Ricomincia' : 'Inizia Registrazione'
+                                ) : (
                                     isCapturing ? 'Recording...' : (frames.length > 0 || handleEndAll.isPending) ? 'Retake' : 'Start Recording'
-                                }
+                                )}
                             </Button>
                           }
                       </Grid.Col>
@@ -303,7 +307,7 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                               disabled={frames.length === 0 || isCapturing}
                               loading={handleEndAll.isPending || handleEndAll.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
-                                  Send
+                                  {language === "it" ? "Continua" : "Send"}
                           </Button>
                       </Grid.Col>
                   </Grid>

@@ -5,9 +5,6 @@ import { TAction, TStory, TStoryPart } from "../types/Story";
 
 const initialState = {
   id: null as string | null,
-//   image: null as TImage | null,
-//   character: null as TCharacter | null,
-//   premise: null as TPremise | null,
   story: null as TStory | null,
   finished: false,
 };
@@ -30,28 +27,6 @@ export const clearEndStore = () => {
   usePracticeEndingsStore.setState(initialState);
 };
 
-// export const setCharacter = (
-//   id: string,
-//   image: TImage,
-//   character: TCharacter
-// ) => {
-//   usePracticeEndingsStore.setState(() => {
-//     return {
-//       id,
-//       image,
-//       character,
-//     };
-//   });
-// };
-
-// export const setPremise = (premise: TPremise) => {
-//   usePracticeEndingsStore.setState(() => {
-//     return {
-//       premise,
-//     };
-//   });
-// };
-
 export const startStory = (story: TStory) => {
   usePracticeEndingsStore.setState(() => {
     console.log("PracticeEndingsStore -> startStory - story:", story);
@@ -59,7 +34,7 @@ export const startStory = (story: TStory) => {
         if (!story.parts[0].actions) {
           story.parts[0].actions = [];
         }
-        story.parts[0].actions[0] = {id: "", title: "Motion Capture", desc: "Use your body to progress the story!", active: true, used: false};
+        story.parts[0].actions[0] = {id: "0", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true};
     }
     console.log("PracticeEndingsStore -> startStory - story:", story);
     return {
@@ -75,11 +50,11 @@ export const appendStory = (part: TStoryPart, start: boolean) => {
       part.actions = [];
     }
     if (start) {
-      part.actions[0] = {id: "", title: "Motion Capture", desc: "Use your body to progress the story!", active: true, used: false};
+      part.actions[0] = {id: "", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true};
     } else {
-      part.actions[0] = {id: "", title: "Next", desc: "Generate a new story to conclude!", active: true, used: false};
-      part.actions[1] = {id: "", title: "Try again", desc: "Try to finish the previous story again!", active: true, used: false};
-      part.actions[2] = {id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false};
+      part.actions[0] = {id: "", title: "Next", desc: "Generate a new story to conclude!", active: true, used: false, isImprov: false};
+      part.actions[1] = {id: "", title: "Try again", desc: "Try to finish the previous story again!", active: true, used: false, isImprov: false};
+      part.actions[2] = {id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false, isImprov: false};
     }
     console.log("Story lenght in appendStory: ", state.story.parts.length);
     return {
@@ -104,23 +79,9 @@ export const tryAgain = () => {
   });
 }
 
-// export const updateActions = (actions: TAction[]) => {
-//   usePracticeEndingsStore.setState((state) => {
-//     if (!state.story) return state;
-//     const parts = state.story.parts;
-//     parts[parts.length - 1].actions = actions;
-//     return {
-//       story: {
-//         ...state.story,
-//         parts,
-//       },
-//     };
-//   });
-// };
-
 export const chooseAction = (action: TAction | null) => {
   if (action === null) {
-    action = {id: "", title: "Motion Capture", desc: "", active: true, used: false};
+    action = {id: "", title: "Improvise", desc: "", active: true, used: false, isImprov: true};
     usePracticeEndingsStore.setState((state) => {
       if (!state.story) return state;
       const parts = state.story.parts;
@@ -170,28 +131,6 @@ export const getLastStoryText = () => {
   const parts = usePracticeEndingsStore.getState().story?.parts;
   return parts ? parts[parts.length - 1].text : null;
 };
-
-// export const canChooseAction = () => {
-//   return usePracticeEndingsStore
-//     .getState()
-//     .story?.parts[
-//         usePracticeEndingsStore.getState().story!.parts.length - 1
-//     ].actions?.every((a) => !a.used);
-// };
-
-// export const updateStoryImage = (image_url: string) => {
-//   usePracticeEndingsStore.setState((state) => {
-//     if (!state.story) return state;
-//     const parts = state.story.parts;
-//     parts[parts.length - 1].image = image_url;
-//     return {
-//       story: {
-//         ...state.story,
-//         parts,
-//       },
-//     };
-//   });
-// };
 
 export const setFinished = (status: boolean | undefined) => {
   usePracticeEndingsStore.setState((state) => {

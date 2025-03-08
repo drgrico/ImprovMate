@@ -25,7 +25,7 @@ import CharacterCard from "./components/CharacterCard";
 import { useMemo, useState } from "react";
 import PremiseCard from "./components/PremiseCard";
 import PreferenceModal from "./components/PreferenceModal/PreferenceModal";
-import { resetPreferences } from "./stores/preferencesStore";
+import { resetPreferences, usePreferencesStore } from "./stores/preferencesStore";
 import AboutModal from "./components/AboutModal/AboutModal";
 import InstructionView from "./components/InstructionView";
 import PracticeEndingsView from "./components/PracticeEndingsView";
@@ -74,6 +74,8 @@ function App() {
     tabControlsRefs[val] = node;
     setTabControlsRefs(tabControlsRefs);
   };
+
+  const language = usePreferencesStore.use.language();
 
   // const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
 
@@ -143,7 +145,7 @@ function App() {
                       color: tabValue === '1' ? "white" : undefined,
                     })
                   }>
-                Help
+                {language === "it" ? "Aiuto" : "Help"}
               </Tabs.Tab>
               <Tabs.Tab 
                 value="2" 
@@ -155,7 +157,7 @@ function App() {
                       color: tabValue === '2' ? "white" : undefined,
                     })
                   }>
-                Context
+                {language === "it" ? "Contesto" : "Context"}
               </Tabs.Tab>
               <Tabs.Tab 
                 value="3" 
@@ -167,7 +169,7 @@ function App() {
                   color: tabValue === '3' ? "white" : undefined,
                 })
               }>
-                Keypoints
+                {language === "it" ? "Punti Chiave" : "Keypoints"}
               </Tabs.Tab>
 
               <FloatingIndicator 
@@ -207,8 +209,8 @@ function App() {
             </Tabs.Panel>
           </Tabs>)}
           
-          {isSession && gameMode === "practice" && isStartedEndings && <PracticeInstructionCard gameMode={"endings"}/>}
-          {isSession && gameMode === "practice" && isStarted3Things && <PracticeInstructionCard gameMode={"threethings"}/>}
+          {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStartedEndings && <PracticeInstructionCard gameMode={"endings"}/>}
+          {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStarted3Things && <PracticeInstructionCard gameMode={"threethings"}/>}
 
         </AppShell.Section>
         {/* <AppShell.Section>
@@ -223,9 +225,9 @@ function App() {
                                                           setGameMode={setGameMode} 
                                                           setIsStartedEndings={setIsStartedEndings}
                                                           setIsStarted3Things={setIsStarted3Things}/>}
-        {isSession && isCharacter && isPremise && gameMode === "story" && <StoryView />}
-        {isSession && gameMode === "practice" && isStartedEndings && <PracticeEndingsView reset={reset}/>}
-        {isSession && gameMode === "practice" && isStarted3Things && <Practice3ThingsView reset={reset}/>}
+        {isSession && isCharacter && isPremise && (gameMode === "story" || gameMode === "storia")  && <StoryView />}
+        {isSession && (gameMode === "practice" || gameMode === "pratica") && isStartedEndings && <PracticeEndingsView reset={reset}/>}
+        {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStarted3Things && <Practice3ThingsView reset={reset}/>}
         {/* {isStartedEndings && <Text>isStartedEndings is true</Text>}
         {isStarted3Things && <Text>isStarted3Things is true</Text>}
         {gameMode === "practice" && <Text>gameMode is practice</Text>} */}

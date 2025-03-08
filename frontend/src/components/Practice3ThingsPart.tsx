@@ -46,6 +46,7 @@ const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
 //   const includeStoryImages = usePreferencesStore.use.includeStoryImages();
 
   const finished = usePractice3ThingsStore.use.finished();
+  const language = usePreferencesStore.use.language();
 
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
@@ -53,7 +54,7 @@ const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
   const validateInput = () => {
     const parts = value.split(',').map(part => part.trim());
     if (parts.length !== 3 || parts.some(part => part === '')) {
-        setError('Please enter 3 items separated by commas');
+        setError(language === "it" ? "Per favore inserisci 3 elementi separati da virgole" : 'Please enter 3 items separated by commas');
         return false;
     }
     else {
@@ -81,9 +82,9 @@ const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
     }
   }, [isNew, text]);
 
-  const handleEndClick = () => {
-    reset();
-  };
+  // const handleEndClick = () => {
+  //   reset();
+  // };
 
   return (
     <>
@@ -135,16 +136,17 @@ const Practice3ThingsPart = ({part, isNew, setNext, reset }: Props) => {
             bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
             c={"white"}
           >
-            The story has ended
+            {language === "en" ? "The story has ended!" :  "La storia è finita!"}
           </Paper>
         )}
-        <Flex direction="row" gap="sm">
-          <ActionButton
+        <Flex direction="row" gap="md" style={{ marginTop: 8 }}>
+          {/* <ActionButton
               key={"Finish"}
-              action={{id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false}}
-              handleClick={() => handleEndClick()}/>
+              action={{id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false, isImprov: false}}
+              isEnd={true}
+              handleClick={() => handleEndClick()}/> */}
           <TextInput
-              placeholder="A cat, a dog, a mouse"
+              placeholder={language === "it" ? "Un gatto, un cane, un topo" : "A cat, a dog, a mouse"}
               value={value}
               onChange={(event) => setValue(event.currentTarget.value)}
               onKeyDown={handleKeyDown}

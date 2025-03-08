@@ -10,6 +10,7 @@ import { createCallLanguage } from '../utils/llmIntegration';
 import HintsModal from './HintsModal';
 import useMic from '../hooks/useMic';
 import { TPremise } from '../types/Premise';
+import { usePreferencesStore } from '../stores/preferencesStore';
 
 type Props = {
     display: boolean;
@@ -35,7 +36,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
 
     const [hintsModal, { open: openHints, close: closeHints }] = useDisclosure();
     const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
-    // const language = usePreferencesStore.use.language();
+    const language = usePreferencesStore.use.language();
 
     const instance = getAxiosInstance();
     // const uploadMotion = useMutation({
@@ -258,7 +259,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                     <Grid.Col span={6}>
                       <Box>
                         <Button fullWidth onClick={openHints}>
-                          Hints
+                          {language === "it" ? "Suggerimenti" : "Hints"}
                         </Button>
                       </Box>
                     </Grid.Col>
@@ -305,7 +306,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                           {isCapturing && (
                               <Button onClick={handleStopRecording} fullWidth
                                   color='red'
-                                  disabled={!isCapturing}>Stop Recording</Button>
+                                  disabled={!isCapturing}>{language === "it" ? "Ferma Registrazione" : "Stop Recording"}</Button>
                           )}
                           {!isCapturing &&
                               <Button onClick={handleStartRecording} fullWidth
@@ -313,9 +314,11 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                                     (frames.length > 0 || handleUploadAll.isPending) ? 'orange' : 'violet'
                                   }
                                   disabled={isCapturing || handleUploadAll.isPending}>
-                                  {
-                                      isCapturing ? 'Recording...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Retake' : 'Start Recording'
-                                  }
+                                  {language === "it" ? (
+                                    isCapturing ? 'Registrazione in corso...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Ricomincia' : 'Inizia Registrazione'
+                                    ) : (
+                                        isCapturing ? 'Recording...' : (frames.length > 0 || handleUploadAll.isPending) ? 'Retake' : 'Start Recording'
+                                    )}
                               </Button>
                           }
                       </Grid.Col>
@@ -325,7 +328,7 @@ const StartImprovUploadModal = ({ display, finalAction }: Props) => {
                               disabled={frames.length === 0 || isCapturing}
                               loading={handleUploadAll.isPending || handleUploadAll.isPending}
                               loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
-                                  Send
+                                  {language === "it" ? "Continua" : "Send"}
                           </Button>
                       </Grid.Col>
                   </Grid>
