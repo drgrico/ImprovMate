@@ -1,5 +1,6 @@
 import "./App.css";
 import {
+  ActionIcon,
   AppShell,
   Box,
   Burger,
@@ -10,11 +11,12 @@ import {
   ScrollArea,
   Tabs,
   Text,
+  Tooltip,
   rem,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link } from "react-router-dom";
-import { FaStar } from "react-icons/fa";
+import { FaQuestionCircle, FaStar } from "react-icons/fa";
 import StoryView from "./components/StoryView";
 import { ColorSchemeToggle } from "./components/ColorSchemeToggle/ColorSchemeToggle";
 import { resetSession, useSessionStore } from "./stores/sessionStore";
@@ -100,18 +102,29 @@ function App() {
       navbar={{
         width: 320,
         breakpoint: "xs",
-        collapsed: { mobile: !opened },
+        collapsed: { mobile: !opened, desktop: !opened },
       }}
       padding="sm"
     >
       <AppShell.Header p="md">
         <Flex justify="space-between" align="center" direction="row" h="100%">
-          <Burger
-            opened={opened}
-            onClick={toggleNavbar}
-            hiddenFrom="sm"
-            size="sm"
-          />
+          <Tooltip label={"Istruzioni e altro"} position="right" withArrow>
+            <Group>
+              <Burger
+                opened={opened}
+                onClick={toggleNavbar}
+                // hiddenFrom="sm"
+                size="sm"
+              />
+              <ActionIcon
+                variant="default"
+                size="xl"
+                onClick={toggleNavbar}
+              >
+                <FaQuestionCircle />
+              </ActionIcon>
+            </Group>
+          </Tooltip>
           <Text size="md" fw={500} fs="italic" ff="heading">
               ImprovMate.
           </Text>
