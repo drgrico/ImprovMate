@@ -6,17 +6,13 @@ import PracticeEndPart from "./PracticeEndPart";
 import { useEffect, useState } from "react";
 
 type Props = {
-    reset: () => void;
+  reset: () => void;
 };
 
-const PracticeEndingsView = ({reset}: Props) => {
+const PracticeEndingsView = ({ reset }: Props) => {
   const instance = getAxiosInstance();
   const { id, story } = usePracticeEndingsStore();
   const [next, setNext] = useState<boolean>(false);
-
-  console.log("PracticeEndingsView - id:", id);
-  console.log("PracticeEndingsView - story:", story);
-  console.log("PracticeEndingsView - next:", next);
 
   const { isError, isLoading, refetch } = useQuery({
     queryKey: ["practice-ending-init", id],
@@ -49,9 +45,6 @@ const PracticeEndingsView = ({reset}: Props) => {
     }
   }, [next, refetch]);
 
-  console.log("PracticeEndingsView - isLoading:", isLoading);
-  console.log("PracticeEndingsView - isError:", isError);
-  
   if (isLoading) {
     return (
       <Center>

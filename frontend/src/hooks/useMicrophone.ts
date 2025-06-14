@@ -183,7 +183,7 @@ const useMicrophone = () => {
     if (
       voiceDataRef.current.isSpeechStarted &&
       voiceDataRef.current.silenceItemsNum >=
-        defaultVolumeConfig.detection_interval
+      defaultVolumeConfig.detection_interval
     ) {
       // Speech not valid: Aborted
       if (e.detail.duration < defaultVolumeConfig.min_speaking_duration) {

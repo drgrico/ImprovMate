@@ -24,17 +24,17 @@ export const usePractice3ThingsStore = createSelectors(
 );
 
 export const clear3ThingsStore = () => {
-    usePractice3ThingsStore.setState(initialState);
+  usePractice3ThingsStore.setState(initialState);
 };
 
 export const startStory = (story: TStory) => {
   usePractice3ThingsStore.setState(() => {
     console.log("Practice3ThingsStore -> startStory - story:", story);
     if (story.parts && story.parts[0]) {
-        if (!story.parts[0].actions) {
-          story.parts[0].actions = [];
-        }
-        story.parts[0].actions[0] = {id: "0", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true};
+      if (!story.parts[0].actions) {
+        story.parts[0].actions = [];
+      }
+      story.parts[0].actions[0] = { id: "0", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true };
     }
     console.log("Practice3ThingsStore -> startStory - story:", story);
     return {

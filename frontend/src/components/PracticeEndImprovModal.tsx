@@ -38,70 +38,17 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
     const instance = getAxiosInstance();
     const language = usePreferencesStore.use.language();
 
-    // const uploadMotion = useMutation({
-    //     mutationKey: ['motion'],
-    //     mutationFn: ({ frames, audioResult }: { frames: string[], audioResult: { text: string, confidence: number } }) => {
-    //         console.log("Selected hints: ", selectedHints);
-            
-    //         return instance.post('/story/process_improv', {
-    //             frames, audioResult: audioResult, hints: selectedHints, language: language, end: true, story: getLastStoryText(),
-    //         }).then((res) => res.data);
-    //     },
-    //     onSuccess: (data) => {
-    //         console.log("Motion uploaded", data);
-    //         setFrames([]);
-            
-    //         handleResult.mutate(data);
-    //         // finalAction(); //Moved to handleResult
-    //     }
-    // });
-
-    // const speechToText = useMutation({
-    //     mutationKey: ['speech-to-text'],
-    //     mutationFn: (audioBlob: string) => {
-    //         return instance.post('/story/speech-to-text',
-    //             createCallLanguage(audioBlob)).then((res) => res.data);
-    //     },
-    //     onSuccess: (data) => {
-    //         setAudioChunks([]);
-    //         console.log("Speech-to-text result:", data);
-    //     }
-    // });
-
-    // const handleResult = useMutation({
-    //     mutationKey: ["motion-part"],
-    //     mutationFn: (improv: { [key: string]: string | number | boolean }) => {
-    //         console.log("Improv in handleResult: ", improv);
-    //         let story = getLastStoryText();
-    //         if (!story) {
-    //             story = "";
-    //             console.log("No story text found in HandleResult - PracticeEndImprovModal");
-    //         }
-
-    //         return instance
-    //             .post("/story/end_story_improv", {story: story, improv: improv})
-    //             .then((res) => res.data.data);
-    //         },
-    //     onSuccess: (data) => {
-    //         console.log("Part generated with improv: ", data);
-    //         appendStory(data, false);
-    //         setSelectedHints({}); //TODO: put it after usage, here ok?
-    //         finalAction();          
-    //     },
-    // });
-
     const handleEndAll = useMutation({
         mutationKey: ["ending-upload-all"],
         mutationFn: ({ audio, frames }: { audio: string, frames: string[] }) => {
-            // console.log("Improv in handleResult: ", improv);
             console.log("Selected hints in handleEndAll: ", selectedHints);
             const story = getLastStoryText();
-            
+
             return instance
                 .post("/story/end_improv_all", {
-                    audio: createCallLanguage(audio), 
-                    frames: frames, 
-                    hints: selectedHints, 
+                    audio: createCallLanguage(audio),
+                    frames: frames,
+                    hints: selectedHints,
                     end: true,
                     story: story,
                     premise: "",
@@ -109,12 +56,12 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
                     exercise: true,
                 })
                 .then((res) => res.data.data);
-            },
+        },
         onSuccess: (data) => {
             console.log("Part generated with improv: ", data);
             appendStory(data, false);
             setSelectedHints({}); //TODO: put it after usage, here ok?
-            finalAction();     
+            finalAction();
         },
     });
 
@@ -129,34 +76,34 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
         if (webcamRef.current && webcamRef.current.video) {
             const stream = webcamRef.current.video.srcObject as MediaStream;
             navigator.mediaDevices.getUserMedia({ audio: true }).then((audioStream) => {
-            const combinedStream = new MediaStream([...stream.getVideoTracks(), ...audioStream.getAudioTracks()]);
-            mediaRecorder.current = new MediaRecorder(combinedStream);
-            mediaRecorder.current.onstart = () => {
-                console.log("ON START");
-                setMediaBlob(null);
-            };
-            mediaRecorder.current.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                chunks.push(event.data);
-                }
-            };
-            mediaRecorder.current.onstop = () => {
-                const blob = new Blob(chunks, { type: "video/mp4" });
-                setMediaBlob(blob);
-            };
-            mediaRecorder.current.start();
+                const combinedStream = new MediaStream([...stream.getVideoTracks(), ...audioStream.getAudioTracks()]);
+                mediaRecorder.current = new MediaRecorder(combinedStream);
+                mediaRecorder.current.onstart = () => {
+                    console.log("ON START");
+                    setMediaBlob(null);
+                };
+                mediaRecorder.current.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        chunks.push(event.data);
+                    }
+                };
+                mediaRecorder.current.onstop = () => {
+                    const blob = new Blob(chunks, { type: "video/mp4" });
+                    setMediaBlob(blob);
+                };
+                mediaRecorder.current.start();
             }).catch((error) => {
-            console.error("Error accessing media devices.", error);
+                console.error("Error accessing media devices.", error);
             });
         }
         else {
-                console.log("No webcamRef.current or webcamRef.current.video");
+            console.log("No webcamRef.current or webcamRef.current.video");
         }
         // Stop automatically after 10 seconds
         setTimeout(() => {
             if (isCapturing) {
-            console.log("TIMEOUT - Stopping recording");
-            handleStopRecording();
+                console.log("TIMEOUT - Stopping recording");
+                handleStopRecording();
             }
         }, 10000);
     }
@@ -170,30 +117,15 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
         mediaRecorder.current?.stop();
     }
 
-    // const handleUpload = async() => {
-    //     console.log(`handleUpload: frames ${frames.length}, audioChunks ${audioChunks.length}`);
-    //     if (frames.length === 0 || audioChunks.length == 0) return;
-        
-    //     const audioChunk = audioChunks[0];
-    //     console.log("Audio chunk:", audioChunk);
-    //     const base64Audio = await convertBlobToBase64(audioChunk);
-
-    //     const audioResult = await speechToText.mutateAsync(base64Audio);
-    //     const motionResult = await uploadMotion.mutateAsync({frames, audioResult}); //ADD audioResult to the motionResult??
-        
-    //     console.log("Motion result: ", motionResult);
-    //     console.log("Audio result: ", audioResult);
-    // }
-
-    const prepareUpload = async() => {
+    const prepareUpload = async () => {
         console.log(`handleUpload: frames ${frames.length}, audioChunks ${audioChunks.length}`);
         if (frames.length === 0 || audioChunks.length == 0) return;
-        
+
         const audioChunk = audioChunks[0];
         console.log("Audio chunk:", audioChunk);
         const base64Audio = await convertBlobToBase64(audioChunk);
 
-        handleEndAll.mutateAsync({audio: base64Audio, frames});
+        handleEndAll.mutateAsync({ audio: base64Audio, frames });
     }
 
     const convertBlobToBase64 = (blob: Blob): Promise<string> => {
@@ -216,151 +148,151 @@ const PracticeEndImprovModal = ({ display, finalAction }: Props) => {
 
     return (
         <>
-        <Box className="motion-upload__wrapper">
-          <Box className="motion-upload__content">
-            <Modal opened={display} onClose={handleClose}
-              size="lg" title="Capture Motion"
-              centered>
-              <Container>
-                <Stack>
-                  <Grid>
-                    <Grid.Col span={6}>
-                      <Box className='motion-upload__devices'>
-                          <Select data={
-                              userDevices.map((device) => ({
-                                  value: device.deviceId,
-                                  label: device.label,
-                              }))
-                          } value={activeDevice}
-                              onChange={(value) => setActiveDevice(value)}
-                              placeholder="Select device" />
-                      </Box>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Box>
-                        <Button fullWidth onClick={openHints}>
-                            {language === "it" ? "Suggerimenti" : "Hints"}
-                        </Button>
-                      </Box>
-                    </Grid.Col>
-                  </Grid>
-                  <Box className="motion-upload__webcam"
-                    style={{
-                      position: 'relative',
-                    }}>
-                    <Box className="motion-upload__overview"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 10,
-                      }}
-                      hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleEndAll.isPending}>
-                      {(frames.length != 0 && !isCapturing && mediaBlob || handleEndAll.isPending) && (
-                          <Box>
-                              <video controls width="100%" style={{ zIndex: 20 }}>
-                              {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
-                              </video>
-                          </Box>
-                      )}
-                    </Box>
-                    {(<Webcam ref={webcamRef} width="100%" videoConstraints={{
-                      deviceId: activeDevice ?? undefined,
-                    }} 
-                      onUserMedia={
-                          () => {
-                              if (userDevices.length === 0)
-                                  navigator.mediaDevices.enumerateDevices()
-                                      .then((devices) => {
-                                          const videoDevices = devices.filter(
-                                              (device) => device.kind === 'videoinput'
-                                          );
-                                          setUserDevices(videoDevices);
-                                          setActiveDevice(videoDevices[0].deviceId);
-                                      });
-                          }
-                      } />)}
-                  </Box>
-                  <Grid>
-                      <Grid.Col span={6}>
-                          {isCapturing && (
-                              <Button onClick={handleStopRecording} fullWidth
-                                  color='red'
-                                  disabled={!isCapturing}>{language === "it" ? "Ferma Registrazione" : "Stop Recording"}</Button>
-                          )}
-                          {!isCapturing &&
-                            <Button onClick={handleStartRecording} fullWidth
-                                color={
-                                    (frames.length > 0 || handleEndAll.isPending) ? 'orange' : 'violet'
-                                }
-                                disabled={isCapturing || handleEndAll.isPending || handleEndAll.isPending}>
-                                {language === "it" ? (
-                                    isCapturing ? 'Registrazione in corso...' : (frames.length > 0 || handleEndAll.isPending) ? 'Ricomincia' : 'Inizia Registrazione'
-                                ) : (
-                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleEndAll.isPending) ? 'Retake' : 'Start Recording'
+            <Box className="motion-upload__wrapper">
+                <Box className="motion-upload__content">
+                    <Modal opened={display} onClose={handleClose}
+                        size="lg" title="Capture Motion"
+                        centered>
+                        <Container>
+                            <Stack>
+                                <Grid>
+                                    <Grid.Col span={6}>
+                                        <Box className='motion-upload__devices'>
+                                            <Select data={
+                                                userDevices.map((device) => ({
+                                                    value: device.deviceId,
+                                                    label: device.label,
+                                                }))
+                                            } value={activeDevice}
+                                                onChange={(value) => setActiveDevice(value)}
+                                                placeholder="Select device" />
+                                        </Box>
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Box>
+                                            <Button fullWidth onClick={openHints}>
+                                                {language === "it" ? "Suggerimenti" : "Hints"}
+                                            </Button>
+                                        </Box>
+                                    </Grid.Col>
+                                </Grid>
+                                <Box className="motion-upload__webcam"
+                                    style={{
+                                        position: 'relative',
+                                    }}>
+                                    <Box className="motion-upload__overview"
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            zIndex: 10,
+                                        }}
+                                        hidden={(frames.length === 0 || isCapturing || !mediaBlob) && !handleEndAll.isPending}>
+                                        {(frames.length != 0 && !isCapturing && mediaBlob || handleEndAll.isPending) && (
+                                            <Box>
+                                                <video controls width="100%" style={{ zIndex: 20 }}>
+                                                    {mediaBlob && <source src={URL.createObjectURL(mediaBlob)} type="video/mp4" />}
+                                                </video>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                    {(<Webcam ref={webcamRef} width="100%" videoConstraints={{
+                                        deviceId: activeDevice ?? undefined,
+                                    }}
+                                        onUserMedia={
+                                            () => {
+                                                if (userDevices.length === 0)
+                                                    navigator.mediaDevices.enumerateDevices()
+                                                        .then((devices) => {
+                                                            const videoDevices = devices.filter(
+                                                                (device) => device.kind === 'videoinput'
+                                                            );
+                                                            setUserDevices(videoDevices);
+                                                            setActiveDevice(videoDevices[0].deviceId);
+                                                        });
+                                            }
+                                        } />)}
+                                </Box>
+                                <Grid>
+                                    <Grid.Col span={6}>
+                                        {isCapturing && (
+                                            <Button onClick={handleStopRecording} fullWidth
+                                                color='red'
+                                                disabled={!isCapturing}>{language === "it" ? "Ferma Registrazione" : "Stop Recording"}</Button>
+                                        )}
+                                        {!isCapturing &&
+                                            <Button onClick={handleStartRecording} fullWidth
+                                                color={
+                                                    (frames.length > 0 || handleEndAll.isPending) ? 'orange' : 'violet'
+                                                }
+                                                disabled={isCapturing || handleEndAll.isPending || handleEndAll.isPending}>
+                                                {language === "it" ? (
+                                                    isCapturing ? 'Registrazione in corso...' : (frames.length > 0 || handleEndAll.isPending) ? 'Ricomincia' : 'Inizia Registrazione'
+                                                ) : (
+                                                    isCapturing ? 'Recording...' : (frames.length > 0 || handleEndAll.isPending) ? 'Retake' : 'Start Recording'
+                                                )}
+                                            </Button>
+                                        }
+                                    </Grid.Col>
+                                    <Grid.Col span={6}>
+                                        <Button onClick={prepareUpload} fullWidth
+                                            disabled={frames.length === 0 || isCapturing}
+                                            loading={handleEndAll.isPending || handleEndAll.isPending}
+                                            loaderProps={{ color: 'white', size: 'md', type: 'dots' }}>
+                                            {language === "it" ? "Continua" : "Send"}
+                                        </Button>
+                                    </Grid.Col>
+                                </Grid>
+                                {handleEndAll.isError && (
+                                    <Text c="red">{handleEndAll.error.message}</Text>
                                 )}
-                            </Button>
-                          }
-                      </Grid.Col>
-                      <Grid.Col span={6}>
-                          <Button onClick={prepareUpload} fullWidth
-                              disabled={frames.length === 0 || isCapturing}
-                              loading={handleEndAll.isPending || handleEndAll.isPending}
-                              loaderProps={{color: 'white', size: 'md', type: 'dots'}}>
-                                  {language === "it" ? "Continua" : "Send"}
-                          </Button>
-                      </Grid.Col>
-                  </Grid>
-                  {handleEndAll.isError && (
-                      <Text c="red">{handleEndAll.error.message}</Text>
-                  )}
-                </Stack>
-                {Object.keys(selectedHints).length > 0 && (
-                        <Dialog opened={Object.keys(selectedHints).length > 0}>
-                        <Box
-                            style={{
-                            height: '100%',
-                            }}
-                        >
-                            {Object.entries(selectedHints).map(([category, hint]) => (
-                            <Box key={category} mb="xs">
-                                <Box
-                                    style={(theme) => ({
-                                        backgroundColor: theme.colors.violet[5],
-                                        padding: theme.spacing.xs,
-                                        borderRadius: theme.radius.sm,
-                                    })}
+                            </Stack>
+                            {Object.keys(selectedHints).length > 0 && (
+                                <Dialog opened={Object.keys(selectedHints).length > 0}>
+                                    <Box
+                                        style={{
+                                            height: '100%',
+                                        }}
                                     >
-                                    <Text color="white">
-                                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                                    </Text>
-                                </Box>
-                                <Box
-                                    style={(theme) => ({
-                                        padding: theme.spacing.xs,
-                                        borderRadius: theme.radius.sm,
-                                    })}
-                                    >
-                                <Text size="sm">{hint}</Text>
-                                </Box>
-                            </Box>
-                            ))}
-                        </Box>
-                        </Dialog>
-                    )}
-              </Container>
-            </Modal>
-          </Box>
-        </Box>
-        <HintsModal display={hintsModal}
-                    ending={true}
-                    storyImprov={false}
-                    selectedHints={selectedHints}
-                    setSelectedHints={setSelectedHints}
-                    finalAction={closeHints} setEndStory={function (): void {
-                        throw new Error('Function not implemented.');
-                    } } />
-      </>
+                                        {Object.entries(selectedHints).map(([category, hint]) => (
+                                            <Box key={category} mb="xs">
+                                                <Box
+                                                    style={(theme) => ({
+                                                        backgroundColor: theme.colors.violet[5],
+                                                        padding: theme.spacing.xs,
+                                                        borderRadius: theme.radius.sm,
+                                                    })}
+                                                >
+                                                    <Text color="white">
+                                                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                                                    </Text>
+                                                </Box>
+                                                <Box
+                                                    style={(theme) => ({
+                                                        padding: theme.spacing.xs,
+                                                        borderRadius: theme.radius.sm,
+                                                    })}
+                                                >
+                                                    <Text size="sm">{hint}</Text>
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Dialog>
+                            )}
+                        </Container>
+                    </Modal>
+                </Box>
+            </Box>
+            <HintsModal display={hintsModal}
+                ending={true}
+                storyImprov={false}
+                selectedHints={selectedHints}
+                setSelectedHints={setSelectedHints}
+                finalAction={closeHints} setEndStory={function (): void {
+                    throw new Error('Function not implemented.');
+                }} />
+        </>
     )
 }
 

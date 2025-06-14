@@ -1705,7 +1705,7 @@ Example JSON object:
                         "type": "text",
                         "text": """
 You a great storyteller.
-1. Create an original story introduction with a limi t of %s characters for the "text" field, including:
+1. Create an original story introduction with a limit of %s characters for the "text" field, including:
     - Character: Introduce a main character with a few unique traits.
     - Setting: Describe where the story takes place, incorporating vivid details.
     - Event: Describe an unusual or intriguing situation that the character encounters.

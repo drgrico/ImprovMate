@@ -27,7 +27,7 @@ const PracticeInstructionCard = ({ gameMode }: Props) => {
   return (
     <Card shadow="md" my={8} padding="sm" radius="md">
       <Card.Section mb="sm">
-        <Text size="md" fw={500} p="xs" bg="violet" c="white" style={{align: "center"}}>
+        <Text size="md" fw={500} p="xs" bg="violet" c="white" style={{ align: "center" }}>
           {shorttext}
         </Text>
       </Card.Section>

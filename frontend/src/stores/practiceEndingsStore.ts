@@ -31,10 +31,10 @@ export const startStory = (story: TStory) => {
   usePracticeEndingsStore.setState(() => {
     console.log("PracticeEndingsStore -> startStory - story:", story);
     if (story.parts && story.parts[0]) {
-        if (!story.parts[0].actions) {
-          story.parts[0].actions = [];
-        }
-        story.parts[0].actions[0] = {id: "0", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true};
+      if (!story.parts[0].actions) {
+        story.parts[0].actions = [];
+      }
+      story.parts[0].actions[0] = { id: "0", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true };
     }
     console.log("PracticeEndingsStore -> startStory - story:", story);
     return {
@@ -50,11 +50,11 @@ export const appendStory = (part: TStoryPart, start: boolean) => {
       part.actions = [];
     }
     if (start) {
-      part.actions[0] = {id: "", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true};
+      part.actions[0] = { id: "", title: "Improvise", desc: "Use your improvisation to progress the story!", active: true, used: false, isImprov: true };
     } else {
-      part.actions[0] = {id: "", title: "Next", desc: "Generate a new story to conclude!", active: true, used: false, isImprov: false};
-      part.actions[1] = {id: "", title: "Try again", desc: "Try to finish the previous story again!", active: true, used: false, isImprov: false};
-      part.actions[2] = {id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false, isImprov: false};
+      part.actions[0] = { id: "", title: "Next", desc: "Generate a new story to conclude!", active: true, used: false, isImprov: false };
+      part.actions[1] = { id: "", title: "Try again", desc: "Try to finish the previous story again!", active: true, used: false, isImprov: false };
+      part.actions[2] = { id: "", title: "Finish", desc: "Finish the practice and return to the main screen!", active: true, used: false, isImprov: false };
     }
     console.log("Story lenght in appendStory: ", state.story.parts.length);
     return {
@@ -81,7 +81,7 @@ export const tryAgain = () => {
 
 export const chooseAction = (action: TAction | null) => {
   if (action === null) {
-    action = {id: "", title: "Improvise", desc: "", active: true, used: false, isImprov: true};
+    action = { id: "", title: "Improvise", desc: "", active: true, used: false, isImprov: true };
     usePracticeEndingsStore.setState((state) => {
       if (!state.story) return state;
       const parts = state.story.parts;

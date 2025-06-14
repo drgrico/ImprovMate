@@ -36,7 +36,7 @@ const CharacterCard = ({ image, character }: Props) => {
         )
         .then((res) => {
           console.log("Character Image - res:", res);
-          const img = {src: res.data.data.image_url, style: "Realistic"}; //TODO: style needed to generate next story images, change style?
+          const img = { src: res.data.data.image_url, style: "Realistic" }; //TODO: style needed to generate next story images, change style?
           setCharacterImage(img);
           image = img;
           console.log("Image:", image);

@@ -83,7 +83,7 @@ export const setPremise = (premise: TPremise) => {
 };
 
 export const startStory = (story: TStory) => {
-  if (story.parts.length > 0) { 
+  if (story.parts.length > 0) {
     if (story.parts[0].who && story.parts[0].where && story.parts[0].objects) {
       addKeyPoints([story.parts[0].who.join(", "), story.parts[0].where, story.parts[0].objects.join(", ")]);
     }
@@ -134,7 +134,7 @@ export const updateActions = (actions: TAction[]) => {
 
 export const chooseAction = (action: TAction | null) => {
   if (action === null) {
-    action = {id: "", title: "Improvise", desc: "", active: true, used: true, isImprov: true};
+    action = { id: "", title: "Improvise", desc: "", active: true, used: true, isImprov: true };
     useAdventureStore.setState((state) => {
       if (!state.story) return state;
       const parts = state.story.parts;
@@ -189,8 +189,8 @@ export const canChooseAction = () => {
   return useAdventureStore
     .getState()
     .story?.parts[
-      useAdventureStore.getState().story!.parts.length - 1
-    ].actions?.every((a) => !a.used);
+    useAdventureStore.getState().story!.parts.length - 1
+  ].actions?.every((a) => !a.used);
 };
 
 export const updateStoryImage = (index: number, image_url: string) => {

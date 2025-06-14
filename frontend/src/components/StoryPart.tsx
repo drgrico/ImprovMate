@@ -159,7 +159,7 @@ const StoryPart = ({ index, part, isNew, storyImprovGenerated, setStoryImprovGen
 
   const [captureModal, { open: openCapture, close: closeCapture }] = useDisclosure();
 
-  const handleMotionClick =  (action: TAction) => {
+  const handleMotionClick = (action: TAction) => {
     if (!action.active) return;
     // chooseAction(action);
     openCapture();
@@ -188,155 +188,146 @@ const StoryPart = ({ index, part, isNew, storyImprovGenerated, setStoryImprovGen
   const finalActionImprov = () => {
     closeCapture();
     console.log("storyImprovGenerated: ", storyImprovGenerated);
-    // if (storyImprovGenerated) {
-    //   console.log("Generating new story part triggered...");
-    //   const story = getStoryText()?.join(" ");
-    //   if (!story) return;
-    //   outcome.mutate({
-    //     premise: useAdventureStore.getState().premise?.desc,
-    //     story: story,
-    //   });
-    // }
   }
 
   return (
     <>
-    <Stack gap="sm">
-      {((part.actions && part.actions.length > 0) || finished) && (
-        <Flex direction={isSm ? "column" : "row"} gap="sm">
-          <Group gap="sm" align="start" justify={"flex-start"}>
-            <Flex direction="column" gap="sm">
-              <Avatar
-                src={
-                  part.sentiment
-                    ? `avatar/bot/bot${part.sentiment}.png`
-                    : "avatar/bot/botneutral.png"
-                }
-                radius="sm"
-              />
-              {index == 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
-            </Flex>
-          </Group>
-          {includeStoryImages && (
-            <Group gap="sm" align="start" justify="center">
-              {part.image ? (
-                <Image
-                  src={part.image}
-                  alt={part.keymoment}
-                  radius="md"
-                  w={240}
-                  h={240}
+      <Stack gap="sm">
+        {((part.actions && part.actions.length > 0) || finished) && (
+          <Flex direction={isSm ? "column" : "row"} gap="sm">
+            <Group gap="sm" align="start" justify={"flex-start"}>
+              <Flex direction="column" gap="sm">
+                <Avatar
+                  src={
+                    part.sentiment
+                      ? `avatar/bot/bot${part.sentiment}.png`
+                      : "avatar/bot/botneutral.png"
+                  }
+                  radius="sm"
                 />
-              ) : (
-                imageLoading && <Skeleton radius="md" w={240} h={240} />
-              )}
+                {index == 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
+              </Flex>
             </Group>
-          )}
-          <Box maw={{ sm: "100%", md: "50%" }}>
-            <Stack gap="xs">
-              <Paper
-                radius="md"
-                p="sm"
-                bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
-                c={"white"}
-              >
-                {textLoading && (
-                  <Loader color="white" size="sm" type="dots" p={0} m={0} />
+            {includeStoryImages && (
+              <Group gap="sm" align="start" justify="center">
+                {part.image ? (
+                  <Image
+                    src={part.image}
+                    alt={part.keymoment}
+                    radius="md"
+                    w={240}
+                    h={240}
+                  />
+                ) : (
+                  imageLoading && <Skeleton radius="md" w={240} h={240} />
                 )}
-                {text && text}
-              </Paper>
-              <ReadController
-                id={part.id}
-                text={text}
-                autoPlay={isNew && autoReadStorySections}
-              />
-            </Stack>
-          </Box>
-        </Flex>)}
+              </Group>
+            )}
+            <Box maw={{ sm: "100%", md: "50%" }}>
+              <Stack gap="xs">
+                <Paper
+                  radius="md"
+                  p="sm"
+                  bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+                  c={"white"}
+                >
+                  {textLoading && (
+                    <Loader color="white" size="sm" type="dots" p={0} m={0} />
+                  )}
+                  {text && text}
+                </Paper>
+                <ReadController
+                  id={part.id}
+                  text={text}
+                  autoPlay={isNew && autoReadStorySections}
+                />
+              </Stack>
+            </Box>
+          </Flex>)}
         {!part.actions || part.actions.length == 0 && (
-        <Flex direction={isSm ? "column" : "row"} gap="sm">
-          <Box maw={{ sm: "100%", md: "50%" }}>
-            <Stack gap="xs">
-              <Paper
-                radius="md"
-                p="sm"
-                bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
-                c={"white"}
-              >
-                {textLoading && (
-                  <Loader color="white" size="sm" type="dots" p={0} m={0} />
-                )}
-                {text && text}
-              </Paper>
-              <ReadController
-                id={part.id}
-                text={text}
-                autoPlay={isNew && autoReadStorySections}
-              />
-            </Stack>
-          </Box>
-          {includeStoryImages && (
-            <Group gap="sm" align="start" justify="center">
-              {part.image ? (
-                <Image
-                  src={part.image}
-                  alt={part.keymoment}
+          <Flex direction={isSm ? "column" : "row"} gap="sm">
+            <Box maw={{ sm: "100%", md: "50%" }}>
+              <Stack gap="xs">
+                <Paper
                   radius="md"
-                  w={240}
-                  h={240}
+                  p="sm"
+                  bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+                  c={"white"}
+                >
+                  {textLoading && (
+                    <Loader color="white" size="sm" type="dots" p={0} m={0} />
+                  )}
+                  {text && text}
+                </Paper>
+                <ReadController
+                  id={part.id}
+                  text={text}
+                  autoPlay={isNew && autoReadStorySections}
                 />
-              ) : (
-                imageLoading && <Skeleton radius="md" w={240} h={240} />
-              )}
+              </Stack>
+            </Box>
+            {includeStoryImages && (
+              <Group gap="sm" align="start" justify="center">
+                {part.image ? (
+                  <Image
+                    src={part.image}
+                    alt={part.keymoment}
+                    radius="md"
+                    w={240}
+                    h={240}
+                  />
+                ) : (
+                  imageLoading && <Skeleton radius="md" w={240} h={240} />
+                )}
+              </Group>
+            )}
+            <Group gap="sm" align="start" justify={"flex-start"}>
+              <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
             </Group>
+          </Flex>)}
+        <Flex
+          ref={targetRef}
+          direction={isSm ? "column" : "row-reverse"}
+          justify="flex-start"
+          align="flex-end"
+          gap="sm"
+        >
+          {part.actions && part.actions.length > 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
+          {finished && isNew && (
+            <Paper
+              radius="md"
+              p="sm"
+              bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+              c={"white"}
+            >
+              {language === "en" ? "The story has ended!" : "La storia è finita!"}
+            </Paper>
           )}
-          <Group gap="sm" align="start" justify={"flex-start"}>
-            <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
-          </Group>
-        </Flex>)}
-      <Flex
-        ref={targetRef}
-        direction={isSm ? "column" : "row-reverse"}
-        justify="flex-start"
-        align="flex-end"
-        gap="sm"
-      >
-        {part.actions && part.actions.length > 0 && (<Avatar src={`avatar/user/${user_avatar}`} radius="sm" />)}
-        {finished && isNew && (
-          <Paper
-            radius="md"
-            p="sm"
-            bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
-            c={"white"}
-          >
-            {language === "en" ? "The story has ended!" :  "La storia è finita!"}
-          </Paper>
-        )}
-        {part.actions &&
-          part.actions?.map((action: TAction, i: number) => {
-            if (action.isImprov) {
-              return  <ActionButton
-              key={i}
-              action={action}
-              isEnd={i === part.actions!.length - 1}
-              handleClick={() => handleMotionClick(action)}
-            />
-            }
-            else {
-            return <ActionButton
-              key={i}
-              action={action}
-              isEnd={i === part.actions!.length - 1}
-              handleClick={() => handleActionClick(action)}
-            />
-          }
-          })}
-        {(actionLoading || outcome.isPending || ending.isPending) && (
-          <Loader color="gray" size="md" />
-        )}
-      </Flex>
-    </Stack>
-    <ImprovPartUploadModal display={captureModal} finalAction={finalActionImprov} setGenerated={setStoryImprovGenerated}/>
+          {part.actions &&
+            part.actions?.map((action: TAction, i: number) => {
+              if (action.isImprov) {
+                return <ActionButton
+                  key={i}
+                  action={action}
+                  isEnd={i === part.actions!.length - 1}
+                  handleClick={() => handleMotionClick(action)}
+                />
+              }
+              else {
+                return <ActionButton
+                  key={i}
+                  action={action}
+                  isEnd={i === part.actions!.length - 1}
+                  handleClick={() => handleActionClick(action)}
+                />
+              }
+            })}
+          {(actionLoading || outcome.isPending || ending.isPending) && (
+            <Loader color="gray" size="md" />
+          )}
+        </Flex>
+      </Stack>
+      <ImprovPartUploadModal display={captureModal} finalAction={finalActionImprov} setGenerated={setStoryImprovGenerated} />
     </>
   );
 };

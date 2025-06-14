@@ -84,7 +84,7 @@ const DrawingUploadModal = ({ display, finalAction }: Props) => {
     >
       <Container>
         <Stack>
-          {(!click || !base64Capture)  && (
+          {(!click || !base64Capture) && (
             <Webcam ref={webcamRef} videoConstraints={videoConstraints} />
           )}
           {click && base64Capture && (

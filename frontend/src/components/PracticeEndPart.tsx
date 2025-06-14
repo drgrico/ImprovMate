@@ -36,7 +36,7 @@ type Props = {
   reset: () => void;
 };
 
-const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
+const PracticeEndPart = ({ part, isNew, setNext, reset }: Props) => {
   const instance = getAxiosInstance();
   const { colorScheme } = useMantineColorScheme();
   const isSm = useMediaQuery("(max-width: 48em)");
@@ -45,16 +45,8 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
   });
 
   const user_avatar = useSessionStore.use.avatar();
-
-//   console.log("PracticeEndPart - part & isNew:", part, isNew);
-//   console.log("PracticeEndPart - part.text:", part.text);
-
   const { data: text, isLoading: textLoading } = useTranslation(part.text);
-//   console.log("PracticeEndPart - text:", text);
-//   console.log("PracticeEndPart - textLoading:", textLoading);
-
   const autoReadStorySections = usePreferencesStore.use.autoReadStorySections();
-//   const includeStoryImages = usePreferencesStore.use.includeStoryImages();
 
   const finished = usePracticeEndingsStore.use.finished();
   const language = usePreferencesStore.use.language();
@@ -81,7 +73,7 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
 
   const [captureModal, { open: openCapture, close: closeCapture }] = useDisclosure();
 
-  const handleMotionClick =  (action: TAction) => {
+  const handleMotionClick = (action: TAction) => {
     if (!action.active) return;
     openCapture();
     printState();
@@ -94,96 +86,97 @@ const PracticeEndPart = ({part, isNew, setNext, reset }: Props) => {
     const story = getLastStoryText();
     if (!story) return;
     if (action.title.toLowerCase() === "finish") { //TODO: = reset?
-    //   ending.mutate({
-    //     story: story,
-    //   });
-        reset();
-    } else if(action.title.toLowerCase() === "next") {
-        setNext(true);
+      //   ending.mutate({
+      //     story: story,
+      //   });
+      reset();
+    } else if (action.title.toLowerCase() === "next") {
+      setNext(true);
     } else { //try again
-        console.log("Try again...");
-        tryAgain();
-        console.log("Try again: ", getLastStoryText());
+      console.log("Try again...");
+      tryAgain();
+      console.log("Try again: ", getLastStoryText());
     }
     printState();
   };
 
   return (
     <>
-    <Stack gap="sm">
-      <Flex direction={isSm ? "column" : "row"} gap="sm">
-        <Group gap="sm" align="start" justify={"flex-start"}>
-          <Avatar
-            src={
-              part.sentiment
-                ? `avatar/bot/bot${part.sentiment}.png`
-                : "avatar/bot/botneutral.png"
-            }
-            radius="sm"
-          />
-        </Group>
-        <Box maw={{ sm: "100%", md: "100%" }}>
-          <Stack gap="xs">
+      <Stack gap="sm">
+        <Flex direction={isSm ? "column" : "row"} gap="sm">
+          <Group gap="sm" align="start" justify={"flex-start"}>
+            <Avatar
+              src={
+                part.sentiment
+                  ? `avatar/bot/bot${part.sentiment}.png`
+                  : "avatar/bot/botneutral.png"
+              }
+              radius="sm"
+            />
+          </Group>
+          <Box maw={{ sm: "100%", md: "100%" }}>
+            <Stack gap="xs">
+              <Paper
+                radius="md"
+                p="sm"
+                bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
+                c={"white"}
+              >
+                {textLoading && (
+                  <Loader color="white" size="sm" type="dots" p={0} m={0} />
+                )}
+                {text && text}
+              </Paper>
+              <ReadController
+                id={part.id}
+                text={text}
+                autoPlay={isNew && autoReadStorySections}
+              />
+            </Stack>
+          </Box>
+        </Flex>
+        <Flex
+          ref={targetRef}
+          direction={isSm ? "column" : "row-reverse"}
+          justify="flex-start"
+          align="flex-end"
+          gap="sm"
+        >
+          <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
+          {finished && isNew && (
             <Paper
               radius="md"
               p="sm"
               bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
               c={"white"}
             >
-              {textLoading && (
-                <Loader color="white" size="sm" type="dots" p={0} m={0} />
-              )}
-              {text && text}
+              {language === "en" ? "The story has ended!" : "La storia è finita!"}
             </Paper>
-            <ReadController
-              id={part.id}
-              text={text}
-              autoPlay={isNew && autoReadStorySections}
-            />
-          </Stack>
-        </Box>
-      </Flex>
-      <Flex
-        ref={targetRef}
-        direction={isSm ? "column" : "row-reverse"}
-        justify="flex-start"
-        align="flex-end"
-        gap="sm"
-      >
-        <Avatar src={`avatar/user/${user_avatar}`} radius="sm" />
-        {finished && isNew && (
-          <Paper
-            radius="md"
-            p="sm"
-            bg={colorScheme === "dark" ? "violet.8" : "violet.4"}
-            c={"white"}
-          >
-            {language === "en" ? "The story has ended!" :  "La storia è finita!"}
-          </Paper>
-        )}
-        {part.actions?.map((action: TAction, i: number) => {
+          )}
+          {part.actions?.map((action: TAction, i: number) => {
             if (action.isImprov) {
-              return  <ActionButton
-              key={i}
-              action={action}
-              isEnd={i === part.actions!.length - 1 && !action.isImprov}
-              handleClick={() => handleMotionClick(action)}
-            />
+              return <ActionButton
+                key={i}
+                action={action}
+                isEnd={i === part.actions!.length - 1 && !action.isImprov}
+                handleClick={() => handleMotionClick(action)}
+              />
             }
             else {
-            return <ActionButton
-              key={i}
-              action={action}
-              isEnd={i === part.actions!.length - 1}
-              handleClick={() => handleActionClick(action)}
-            />
-          }})}
-        {(outcome.isPending) && (
-          <Loader color="gray" size="md" />
-        )}
-      </Flex>
-    </Stack>
-    <PracticeEndImprovModal display={captureModal} finalAction={closeCapture}/>
+              return <ActionButton
+                key={i}
+                action={action}
+                isEnd={i === part.actions!.length - 1}
+                handleClick={() => handleActionClick(action)}
+              />
+            }
+          })}
+          {(outcome.isPending) && (
+            <Loader color="gray" size="md" />
+          )}
+        </Flex>
+      </Stack>
+      <PracticeEndImprovModal display={captureModal} finalAction={closeCapture} />
     </>
   );
 };

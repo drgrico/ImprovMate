@@ -19,15 +19,15 @@ const StoryInstructionCard = () => {
   return (
     <Card shadow="md" my={8} padding="sm" radius="md">
       <Card.Section mb="sm">
-        <Text size="md" fw={500} p="xs" bg="violet" c="white" style={{align: "center"}}>
+        <Text size="md" fw={500} p="xs" bg="violet" c="white" style={{ align: "center" }}>
           {shorttext}
         </Text>
       </Card.Section>
-        <ol>
-            {longtext.split('\n').map((line, index) => (
-            <li key={index}>{line}</li>
-            ))}
-        </ol>
+      <ol>
+        {longtext.split('\n').map((line, index) => (
+          <li key={index}>{line}</li>
+        ))}
+      </ol>
       <Card.Section p="xs">
         <ReadController id="card" text={longtext} />
       </Card.Section>

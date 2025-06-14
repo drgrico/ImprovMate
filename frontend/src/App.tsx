@@ -65,7 +65,7 @@ function App() {
   const premise = useAdventureStore.use.premise();
   const isPremise = useMemo(() => premise !== null, [premise]);
 
-  const [gameMode, setGameMode] = useState<string | null> (null);
+  const [gameMode, setGameMode] = useState<string | null>(null);
   const [isStartedEndings, setIsStartedEndings] = useState<boolean>(false);
   const [isStarted3Things, setIsStarted3Things] = useState<boolean>(false);
 
@@ -78,22 +78,6 @@ function App() {
   };
 
   const language = usePreferencesStore.use.language();
-
-  // const [selectedHints, setSelectedHints] = useState<{ [category: string]: string }>({});
-
-  // const [keyPoints, setKeyPoints] = useState(getKeyPointsTable());
-  // const [toTranslate, setToTranslate] = useState(true);
-
-  // useEffect(() => {
-  //   const unsubscribe = useAdventureStore.subscribe((state) => {
-  //     setKeyPoints(getKeyPointsTable());
-  //     setToTranslate(true);
-  //   });
-  //   return () => unsubscribe();
-  // }, []);
-
-  // console.log("Character: ", character);
-  // console.log("isCharacter: ", isCharacter);
 
   return (
     <AppShell
@@ -126,7 +110,7 @@ function App() {
             </Group>
           </Tooltip>
           <Text size="md" fw={500} fs="italic" ff="heading">
-              ImprovMate.
+            ImprovMate.
           </Text>
           <Group gap="sm">
             <Button disabled={!isSession} onClick={reset} color="orange">
@@ -147,62 +131,57 @@ function App() {
           scrollHideDelay={500}
         >
           {(isCharacter || isPremise) && (<Tabs variant="none" value={tabValue} onChange={setTabValue}>
-            <Tabs.List ref={setTabRootRef} justify="center" style={{position: "sticky"}}>
-            <Tabs.Tab 
-                value="1" 
-                ref={setTabControlRef('1')} 
-                size="compact-md" 
+            <Tabs.List ref={setTabRootRef} justify="center" style={{ position: "sticky" }}>
+              <Tabs.Tab
+                value="1"
+                ref={setTabControlRef('1')}
+                size="compact-md"
                 style={() => ({
-                      fontWeight: 500, 
-                      zIndex: 1,
-                      color: tabValue === '1' ? "white" : undefined,
-                    })
-                  }>
+                  fontWeight: 500,
+                  zIndex: 1,
+                  color: tabValue === '1' ? "white" : undefined,
+                })
+                }>
                 {language === "it" ? "Aiuto" : "Help"}
               </Tabs.Tab>
-              <Tabs.Tab 
-                value="2" 
-                ref={setTabControlRef('2')} 
-                size="compact-md" 
+              <Tabs.Tab
+                value="2"
+                ref={setTabControlRef('2')}
+                size="compact-md"
                 style={() => ({
-                      fontWeight: 500, 
-                      zIndex: 1,
-                      color: tabValue === '2' ? "white" : undefined,
-                    })
-                  }>
+                  fontWeight: 500,
+                  zIndex: 1,
+                  color: tabValue === '2' ? "white" : undefined,
+                })
+                }>
                 {language === "it" ? "Contesto" : "Context"}
               </Tabs.Tab>
-              <Tabs.Tab 
-                value="3" 
-                ref={setTabControlRef('3')} 
-                size="compact-md" 
+              <Tabs.Tab
+                value="3"
+                ref={setTabControlRef('3')}
+                size="compact-md"
                 style={() => ({
-                  fontWeight: 500, 
+                  fontWeight: 500,
                   zIndex: 1,
                   color: tabValue === '3' ? "white" : undefined,
                 })
-              }>
+                }>
                 {language === "it" ? "Punti Chiave" : "Keypoints"}
               </Tabs.Tab>
 
-              <FloatingIndicator 
+              <FloatingIndicator
                 target={tabValue ? tabControlsRefs[tabValue] : null}
                 parent={tabRootRef}
                 style={(theme) => ({
                   backgroundColor: theme.colors.violet[6],
                   borderRadius: theme.radius.md,
                   boxShadow: theme.shadows.md,
-                  // padding: '4px 8px', // Add padding to the indicator?
-                  // transform: 'translateY(-50%)', // Adjust position?
-                  // zIndex: 1,
-                  // fontWeight: 900,
-                  // color: tabValue ? theme.colors.violet[0] : theme.colors.violet[6],
                 })}>
-                </FloatingIndicator>
+              </FloatingIndicator>
             </Tabs.List>
 
             <Tabs.Panel value="1">
-              <StoryInstructionCard/>
+              <StoryInstructionCard />
             </Tabs.Panel>
             <Tabs.Panel value="2">
               <Flex direction="column">
@@ -213,37 +192,24 @@ function App() {
               </Flex>
             </Tabs.Panel>
             <Tabs.Panel value="3">
-              <KeyPointsView/>
-              {/* <KeyPointsView keypoints={keyPoints} toTranslate={toTranslate} setToTranslate={setToTranslate}/> */}
-              {/* {KPLoading && (
-                <Loader color="white" size="sm" type="dots" p={0} m={0} />
-              )}
-              {!KPLoading && <Table data={translatedKP}/>}             */}
+              <KeyPointsView />
             </Tabs.Panel>
           </Tabs>)}
-          
-          {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStartedEndings && <PracticeInstructionCard gameMode={"endings"}/>}
-          {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStarted3Things && <PracticeInstructionCard gameMode={"threethings"}/>}
+
+          {isSession && (gameMode === "practice" || gameMode === "pratica") && isStartedEndings && <PracticeInstructionCard gameMode={"endings"} />}
+          {isSession && (gameMode === "practice" || gameMode === "pratica") && isStarted3Things && <PracticeInstructionCard gameMode={"threethings"} />}
 
         </AppShell.Section>
-        {/* <AppShell.Section>
-          <Group justify="center" p="sm">
-            <SpeechMonitor size="lg" feedback />
-          </Group>
-        </AppShell.Section> */}
       </AppShell.Navbar>
       <AppShell.Main w={rem("99vw")}>
-        {(!isSession || !isCharacter || !isPremise) && !isStartedEndings && !isStarted3Things 
-                                                      && <InstructionView 
-                                                          setGameMode={setGameMode} 
-                                                          setIsStartedEndings={setIsStartedEndings}
-                                                          setIsStarted3Things={setIsStarted3Things}/>}
-        {isSession && isCharacter && isPremise && (gameMode === "story" || gameMode === "storia")  && <StoryView />}
-        {isSession && (gameMode === "practice" || gameMode === "pratica") && isStartedEndings && <PracticeEndingsView reset={reset}/>}
-        {isSession && (gameMode === "practice" || gameMode === "pratica")  && isStarted3Things && <Practice3ThingsView reset={reset}/>}
-        {/* {isStartedEndings && <Text>isStartedEndings is true</Text>}
-        {isStarted3Things && <Text>isStarted3Things is true</Text>}
-        {gameMode === "practice" && <Text>gameMode is practice</Text>} */}
+        {(!isSession || !isCharacter || !isPremise) && !isStartedEndings && !isStarted3Things
+          && <InstructionView
+            setGameMode={setGameMode}
+            setIsStartedEndings={setIsStartedEndings}
+            setIsStarted3Things={setIsStarted3Things} />}
+        {isSession && isCharacter && isPremise && (gameMode === "story" || gameMode === "storia") && <StoryView />}
+        {isSession && (gameMode === "practice" || gameMode === "pratica") && isStartedEndings && <PracticeEndingsView reset={reset} />}
+        {isSession && (gameMode === "practice" || gameMode === "pratica") && isStarted3Things && <Practice3ThingsView />}
       </AppShell.Main>
       <AppShell.Footer p="sm">
         <Flex w="100%" h="100%" justify="center" align="center" gap="sm">

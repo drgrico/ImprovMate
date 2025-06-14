@@ -5,25 +5,21 @@ import { appendStory, startStory, usePractice3ThingsStore } from "../stores/prac
 import Practice3ThingsPart from "./Practice3ThingsPart";
 import { useEffect, useState, useRef } from "react";
 
-type Props = {
-    reset: () => void;
-};
+// type Props = {
+// reset: () => void;
+// };
 
-const Practice3ThingsView = ({reset}: Props) => {
+const Practice3ThingsView = () => {
   const instance = getAxiosInstance();
   const { id, story } = usePractice3ThingsStore();
   const [next, setNext] = useState<boolean>(false);
   const [questions, setQuestions] = useState<any[]>([]); //array of questions
   const [cntQ, setCntQ] = useState<number>(0);
   const maxQ = 20;
-  const [timeLeft, setTimeLeft] = useState<number>(10);
+  const [timeLeft, setTimeLeft] = useState<number>(15);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // console.log("Practice3ThingsView - id:", id);
-  console.log("Practice3ThingsView - story:", story);
-  console.log("Practice3ThingsView - next:", next);
 
   const { isError, isLoading, refetch } = useQuery({
     queryKey: ["practice-3things-init", id],
@@ -31,7 +27,7 @@ const Practice3ThingsView = ({reset}: Props) => {
       return instance
         .post(
           "/practice/generate_questions",
-          { maxQ: maxQ }, 
+          { maxQ: maxQ },
           { signal }
         )
         .then((res) => {
@@ -55,15 +51,12 @@ const Practice3ThingsView = ({reset}: Props) => {
 
   useEffect(() => {
     if (!isLoading && story && story.parts.length > 0) {
-      // Resetta il countdown per la domanda corrente
-      setTimeLeft(10);
-      
-      // Timer che al termine dei 10 secondi passa alla domanda successiva
+      setTimeLeft(15);
+
       timerRef.current = setTimeout(() => {
         setNext(true);
-      }, 10000);
+      }, 15000);
 
-      // Intervallo che aggiorna lo stato del countdown ogni secondo
       intervalRef.current = setInterval(() => {
         setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
@@ -102,9 +95,7 @@ const Practice3ThingsView = ({reset}: Props) => {
     }
   }, [next, refetch, cntQ, maxQ, questions]);
 
-  // console.log("Practice3ThingsView - isLoading:", isLoading);
-  // console.log("Practice3ThingsView - isError:", isError);
-  
+
   if (isLoading) {
     return (
       <Center>
@@ -129,15 +120,14 @@ const Practice3ThingsView = ({reset}: Props) => {
   return (
     <Box component={Group} align="center" justify="center" pb="xl">
       <Grid w="100%">
-      <Grid.Col span={{ sm: 12, md: 8 }} offset={{ sm: 0, md: 2 }}>
+        <Grid.Col span={{ sm: 12, md: 8 }} offset={{ sm: 0, md: 2 }}>
           <Stack>
-          {story.parts.map((part, i) => (
+            {story.parts.map((part, i) => (
               <Box key={i} style={{ position: "relative", marginBottom: 8 }}>
                 <Practice3ThingsPart
                   isNew={i === story.parts.length - 1}
                   part={part}
                   setNext={setNext}
-                  reset={reset}
                 />
                 {i === story.parts.length - 1 && (
                   <Box
@@ -148,12 +138,12 @@ const Practice3ThingsView = ({reset}: Props) => {
                       marginBottom: 8,
                     }}
                   >
-                    <Box style={{ position: "relative"}}>
+                    <Box style={{ position: "relative" }}>
                       <RingProgress
                         roundCaps
                         size={60}
                         thickness={6}
-                        sections={[{ value: (timeLeft / 10) * 100, color: "violet" }]}
+                        sections={[{ value: (timeLeft / 15) * 100, color: "violet" }]}
                       />
                       <Text
                         size="xs"

@@ -24,27 +24,26 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
   const [ending, setEnding] = useState<boolean>(startingEnding);
   const targetLanguage = usePreferencesStore.use.language();
   // console.log("Preference language:", targetLanguage);
-  
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["hints"],
     queryFn: ({ signal }) => {
       console.log("Getting hints...");
-      if(ending) {
+      if (ending) {
         return instance
-          .post("/story/end_hints", {language: targetLanguage, context: createCallContext({ })}, { signal }) //TODO: Add in createCallContext
-          .then((res) => 
-            {
-              console.log("HintList: ", res.data.data.list);
-              return res.data.data.list;
-            }
-          );
-      }
-      return instance
-        .post("/story/hints", {language: targetLanguage, context: createCallContext({ })}, { signal }) //TODO: Add in createCallContext
-        .then((res) => {
+          .post("/story/end_hints", { language: targetLanguage, context: createCallContext({}) }, { signal }) //TODO: Add in createCallContext
+          .then((res) => {
             console.log("HintList: ", res.data.data.list);
             return res.data.data.list;
           }
+          );
+      }
+      return instance
+        .post("/story/hints", { language: targetLanguage, context: createCallContext({}) }, { signal }) //TODO: Add in createCallContext
+        .then((res) => {
+          console.log("HintList: ", res.data.data.list);
+          return res.data.data.list;
+        }
         );
     },
     enabled: display,
@@ -54,28 +53,9 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
     // NOTE: React-Query storage and cache will only persist until refresh so need to check existing storage
   });
 
-  // const translate = useMutation({
-  //   mutationKey: ["translate-hints"],
-  //       mutationFn: (list: any) => { 
-  //         return instance
-  //             .get("/translate", {
-  //               params: {
-  //                 text: JSON.stringify(list),
-  //                 src_lang: sourceLanguage,
-  //                 tgt_lang: targetLanguage,
-  //             }})
-  //             .then((res) => {
-  //               console.log("Translated hints: ", res);
-  //               setHintList(JSON.parse(res.data.data.text)); 
-  //             });
-  //       },
-  // });
-
-  // if (!character) return null;
   useEffect(() => {
     if (data) {
       setHintList(data);
-      // translate.mutate(data);
     }
   }, [data]);
 
@@ -85,23 +65,6 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
       refetch();
     }
   }, [targetLanguage]);
-
-  // useEffect(() => {
-  //   if (selectedHints) {
-  //     console.log("Selected hints: ", selectedHints);
-  //     if (Object.keys(selectedHints).length === 0) {
-  //       setHintList([]);
-  //     }
-  //   }
-  // }, [selectedHints]) //LOOP -> check too many times
-
-  // useEffect(() => {
-  //   if (display) {
-  //     refetch();
-  //   } else {
-  //     setHintList([]);
-  //   }
-  // }, [display, refetch]);
 
   const handleSelectHint = (category: string, hint: string) => {
     setSelectedHints((prev: { [key: string]: string }) => ({
@@ -135,24 +98,13 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
     refetch();
   }
 
-  // console.log("hintList.length: ", hintList.length);
-  // console.log("ending: ", ending);
   useEffect(() => {
     console.log("UseEffect for refetching hints...");
-    // if (hintList.length === 3 && ending) {
-    //   refetch();
-    // }
-    // if (hintList.length === 4 && !ending) {
-    //   refetch();
-    // }
     setHintList([]);
     refetch(); //TODO: check if right logic
   }, [ending]);
 
   if (!display) return null;
-
-  // console.log("HintList: ", hintList);
-  // console.log("Selected hints: ", selectedHints);
 
   return ( //TODO: render next to the camera window
     <Modal
@@ -174,13 +126,13 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
         )}
         {hintList && hintList.length > 0 && (
           <Accordion chevron={<FaPlus />}>
-              {!ending && hintList.length > 0 && Object.keys(hintList[0]).map((category) => (
-                <Accordion.Item key={category} value={category}>
-                  <Accordion.Control>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}?
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    {hintList.map((hint: { [key: string]: string }, index: number) => (
+            {!ending && hintList.length > 0 && Object.keys(hintList[0]).map((category) => (
+              <Accordion.Item key={category} value={category}>
+                <Accordion.Control>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}?
+                </Accordion.Control>
+                <Accordion.Panel>
+                  {hintList.map((hint: { [key: string]: string }, index: number) => (
                     <Box key={index} mb="sm">
                       <Grid align="center">
                         <Grid.Col span={10}>
@@ -195,51 +147,51 @@ const HintsModal = ({ display, ending: startingEnding, storyImprov, selectedHint
                           </Button>
                         </Grid.Col>
                       </Grid>
-                     </Box>
-                    ))}       
-                  </Accordion.Panel>
-                </Accordion.Item>
-              ))}
-              {ending && hintList.length > 0 && Object.keys(hintList[0]).map((category) => (
-                <Accordion.Item key={category} value={category}>
-                  <Accordion.Control>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    {hintList.map((hint: { [key: string]: string }, index: number) => (
-                       <Box key={index} mb="sm">
-                       <Grid align="center">
-                         <Grid.Col span={10}>
-                           <span>{index + 1} - {hint[category]}</span>
-                         </Grid.Col>
-                         <Grid.Col span={2}>
-                           <Button
-                             size="xs"
-                             onClick={() => handleSelectEndHint(category, hint[category])}
-                             disabled={Object.values(selectedHints).includes(hint[category])}>
-                             {targetLanguage === "it" ? "Seleziona" : "Select"}
-                           </Button>
-                         </Grid.Col>
-                       </Grid>
-                      </Box>
-                    ))}
-                  </Accordion.Panel>
-                </Accordion.Item>
-              ))}
+                    </Box>
+                  ))}
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+            {ending && hintList.length > 0 && Object.keys(hintList[0]).map((category) => (
+              <Accordion.Item key={category} value={category}>
+                <Accordion.Control>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </Accordion.Control>
+                <Accordion.Panel>
+                  {hintList.map((hint: { [key: string]: string }, index: number) => (
+                    <Box key={index} mb="sm">
+                      <Grid align="center">
+                        <Grid.Col span={10}>
+                          <span>{index + 1} - {hint[category]}</span>
+                        </Grid.Col>
+                        <Grid.Col span={2}>
+                          <Button
+                            size="xs"
+                            onClick={() => handleSelectEndHint(category, hint[category])}
+                            disabled={Object.values(selectedHints).includes(hint[category])}>
+                            {targetLanguage === "it" ? "Seleziona" : "Select"}
+                          </Button>
+                        </Grid.Col>
+                      </Grid>
+                    </Box>
+                  ))}
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
           </Accordion>
         )}
         <Box style={{ display: "flex", justifyContent: "center" }} mt="md">
-        <Button disabled={isLoading} onClick={finalAction} mr="md">
-          {targetLanguage === "it" ? "Avanti" : "Done"}
-        </Button>
-        <Button disabled={isLoading} onClick={handleNewHints} mr="md">
-          {targetLanguage === "it" ? "Altri Suggerimenti" : "New Hints"}
-        </Button>
-        {storyImprov && (
-           <Button disabled={isLoading} onClick={toggleMode}>
-            {targetLanguage === "it" ? (ending ? "Continua Storia" : "Termina Storia") : (ending ? "Continue Story" : "End Story")}
-         </Button>
-        )}
+          <Button disabled={isLoading} onClick={finalAction} mr="md">
+            {targetLanguage === "it" ? "Avanti" : "Done"}
+          </Button>
+          <Button disabled={isLoading} onClick={handleNewHints} mr="md">
+            {targetLanguage === "it" ? "Altri Suggerimenti" : "New Hints"}
+          </Button>
+          {storyImprov && (
+            <Button disabled={isLoading} onClick={toggleMode}>
+              {targetLanguage === "it" ? (ending ? "Continua Storia" : "Termina Storia") : (ending ? "Continue Story" : "End Story")}
+            </Button>
+          )}
         </Box>
       </Container>
     </Modal>

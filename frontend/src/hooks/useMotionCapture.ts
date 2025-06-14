@@ -51,13 +51,13 @@ const useMotionCapture = () => {
     }
   }, []);
 
-  return { 
-    webcamRef, 
-    videoBlob, 
-    clear, 
-    startRecording, 
-    stopRecording, 
-    isRecording 
+  return {
+    webcamRef,
+    videoBlob,
+    clear,
+    startRecording,
+    stopRecording,
+    isRecording
   };
 };
 

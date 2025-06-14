@@ -5,11 +5,6 @@ import { Table, Loader, Center, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getKeyPointsTable, useKeyPointsState, checkFormat } from "../stores/adventureStore";
 
-// type Props = {
-//   keypoints: TableData;
-//   toTranslate: boolean;
-//   setToTranslate: (val: boolean) => void;
-// }
 
 const KeyPointsView = () => {
   const instance = getAxiosInstance();
@@ -17,7 +12,6 @@ const KeyPointsView = () => {
   const targetLanguage = usePreferencesStore.use.language();
 
   const [keyPoints, setKeyPoints] = useState(getKeyPointsTable());
-  // console.log("useTableTranslation - content:", keyPoints);
 
   const [toTranslate, setToTranslate] = useState<boolean>(false);
 
@@ -36,7 +30,6 @@ const KeyPointsView = () => {
     queryFn: ({ signal }) => {
       if (sourceLanguage === targetLanguage) return keyPoints;
       setToTranslate(false);
-      // console.log("useTableTranslation - keyPoints:", keyPoints);
 
       return instance
         .get("/translate_keypoints", { //TODO: ASK for JSON format? -> avoid formatting errors
@@ -48,10 +41,6 @@ const KeyPointsView = () => {
           signal,
         })
         .then((res) => {
-          // console.log("useTableTranslation - res:", res);
-          // const jsonString = JSON.stringify(res.data.data.text);
-          // console.log("useTableTranslation - jsonString:", jsonString);
-          // const translatedKeyPoints: TableData = JSON.parse(jsonString); 
           const text = res.data.data.text;
           let translatedKeyPoints: { head: string[]; body: (string | string[])[][] };
           if (text && text.body && Array.isArray(text.head)) {
@@ -64,15 +53,12 @@ const KeyPointsView = () => {
           }
           console.log("useTableTranslation - translatedKeyPoints:", translatedKeyPoints);
           return checkFormat(translatedKeyPoints);
-        }); 
+        });
     },
     enabled: !!keyPoints && keyPoints.body && keyPoints.body.length > 0 && toTranslate, //CONDITION HERE??
     staleTime: Infinity,
     refetchOnMount: false, //REFETCH HERE??
   });
-
-  // console.log("useTableTranslation - data:", data);
-  // console.log("useTableTranslation - toTranslate:", toTranslate);
 
   if (isLoading) {
     return (
@@ -93,7 +79,7 @@ const KeyPointsView = () => {
 
   return (
     <>
-      <Table data={data}/>
+      <Table data={data} />
     </>
   );
 };

@@ -17,7 +17,7 @@ load_dotenv()
 # Specify the static folder path
 app = Flask(__name__)
 # CORS(app)
-CORS(app, origins=["*"])  # Consente tutte le origini
+CORS(app, origins=["*"])  # All origins allowed
 
 # Get the environment variables
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -449,37 +449,6 @@ def process_motion():
         if logger:
             logger.error(str(e))
         return jsonify({"error": str(e)}), 500
-    
-    
-# @app.route("/api/story/motionpart", methods=["POST"])
-# def motionpart_gen():
-#     try:
-#         data = request.get_json()
-#         if not data:
-#             if logger:
-#                 logger.error("No data found in the request!")
-#             return jsonify(type="error", message="No data found!", status=400)
-#         if logger:
-#             logger.debug(f"Data received by motionpart_gen(): {data}")
-            
-#         complexity = data.get("complexity", None)
-#         context = data.get("context", None)
-        
-#         result = llm.generate_motion_part(context, complexity)
-#         part_id = uuid.uuid4()
-#         if logger:
-#             logger.debug(f"Story part generated: {result}")
-#         part = result["part"]
-#         return jsonify(
-#             type="success",
-#             message="Story part generated!",
-#             status=200,
-#             data={"id": part_id, **part},
-#         )
-#     except Exception as e:
-#         if logger:
-#             logger.error(str(e))
-#         return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/story/speech-to-text", methods=["POST"])
@@ -491,7 +460,6 @@ def speech_to_text():
                 logger.error("No data found in the request!")
             return jsonify(type="error", message="No data found!", status=400)
         if logger:
-            # logger.debug(f"Data received by speech-to-text(): {data}")
             logger.debug(f"Data received by speech-to-text().")
 
         audio = data.get("audio")
@@ -668,12 +636,6 @@ def premise_from_improv():
             return jsonify(type="error", message="No data found!", status=400)
         if logger:
             logger.debug(f"Data received by premise_from_improv(): {data}")
-        
-        # req = data.get("data")
-        # if not req:
-        #     if logger:
-        #         logger.error("No data found in the request!")
-        #     return jsonify(type="error", message="No data found!", status=400)
         
         improv = data.get("improv")
         transcript = improv.get("data").get("transcript")

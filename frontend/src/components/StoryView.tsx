@@ -10,14 +10,8 @@ const StoryView = () => {
   const instance = getAxiosInstance();
   const { id, character, premise, story } = useAdventureStore();
 
-  // console.log("StoryView - id:", id);
-  // console.log("StoryView - story:", story);
-
   const [storyImprovGenerated, setStoryImprovGenerated] = useState(false);
 
-  // useEffect(() => {
-  //   console.log("storyImprovGenerated is set to:", storyImprovGenerated);
-  // }, [storyImprovGenerated]);
 
   const { isError, isLoading } = useQuery({
     queryKey: ["story-init", id],
